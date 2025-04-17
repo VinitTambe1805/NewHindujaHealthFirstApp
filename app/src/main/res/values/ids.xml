@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="searchView" type="id" />
+    <item name="recyclerView" type="id" />
+    <item name="bookAppointment" type="id" />
+    <item name="txtforgetpassword" type="id"></item>
+    <item name="buttonReset" type="id"></item>>
+    <item name="textForgetPassword" type="id"></item>
+</resources>

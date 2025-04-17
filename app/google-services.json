@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "491017414130",
+    "project_id": "hindujahealthfirst",
+    "storage_bucket": "hindujahealthfirst.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:491017414130:android:8855a4eba3c4a46ea9376b",
+        "android_client_info": {
+          "package_name": "com.example.hinduja_health_first"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyASgdpqKD_M5-bvF1MN1kBol06LPS6lw2s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

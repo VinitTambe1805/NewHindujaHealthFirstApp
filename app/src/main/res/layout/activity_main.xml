@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/img2"
+    tools:context=".MainActivity">
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constraintLayout"
+        android:layout_width="match_parent"
+        android:layout_height="795dp"
+        app:layout_anchor="@+id/constraintLayout"
+        app:layout_anchorGravity="center">
+
+
+        <ImageView
+            android:id="@+id/logo"
+            android:layout_width="65dp"
+            android:layout_height="90dp"
+            android:contentDescription="App Logo"
+            android:paddingLeft="10dp"
+            android:paddingTop="30sp"
+            android:src="@drawable/img1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+
+        <com.google.android.material.textfield.TextInputLayout
+
+            android:id="@+id/dropdown_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:layout_marginTop="10dp"
+            android:hint="@string/select"
+            app:layout_constraintStart_toStartOf="@id/logo"
+            app:layout_constraintTop_toBottomOf="@id/logo">
+
+
+            <AutoCompleteTextView
+                android:id="@+id/auto_complete_txt"
+                android:layout_width="360dp"
+                android:layout_height="wrap_content"
+                android:inputType="none"
+                android:padding="8dp" />
+
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <SearchView
+            android:id="@+id/search_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="18dp"
+            android:queryHint="Search By Doctors,Speciality,Services"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/dropdown_layout" />
+
+        <Button
+            android:id="@+id/submit_button"
+            android:layout_width="159dp"
+            android:layout_height="70dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/rectangular_button"
+            android:text="Book Appointment"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/search_bar" />
+
+        <Button
+            android:id="@+id/book_services"
+            android:layout_width="159dp"
+            android:layout_height="70dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/rectangular_button"
+            android:text="Book Test and Services"
+            android:textAlignment="center"
+            app:layout_constraintStart_toEndOf="@id/submit_button"
+            app:layout_constraintTop_toBottomOf="@id/search_bar" />
+
+
+        <Button
+            android:id="@+id/health_blog"
+            android:layout_width="159dp"
+            android:layout_height="70dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/rectangular_button"
+            android:padding="10dp"
+            android:text="Health Blogs"
+            android:textAlignment="center"
+            android:textColor="@color/white"
+            app:layout_constraintStart_toStartOf="@+id/submit_button"
+            app:layout_constraintTop_toBottomOf="@id/submit_button" />
+
+        <Button
+            android:id="@+id/health_checkup"
+            android:layout_width="159dp"
+            android:layout_height="70dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/rectangular_button"
+            android:text="Book Health CheckUp"
+            android:textColor="@color/white"
+            app:layout_constraintStart_toEndOf="@id/health_blog"
+            app:layout_constraintTop_toBottomOf="@id/submit_button" />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
+

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="10dp">
+
+
+    <ImageView
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:id="@+id/docimageview"
+        android:layout_marginRight="10dp"
+        android:layout_centerVertical="true"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/docname"
+        android:layout_toEndOf="@+id/docimageview"
+        android:textColor="@color/black"
+        android:textSize="20dp"
+        android:text="Name" />
+
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/docSpecs"
+        android:layout_toEndOf="@+id/docname"
+        android:textColor="@color/black"
+        android:textSize="20dp"
+        android:text="Specialty"/>
+
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/docExp"
+        android:layout_toEndOf="@+id/docSpecs"
+        android:textColor="@color/black"
+        android:textSize="20dp"
+        android:text="Experience"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:layout_marginTop="10dp"
+        android:layout_below="@id/docimageview"
+        android:background="@color/grey"/>
+
+
+
+</RelativeLayout>
