@@ -43,8 +43,4 @@ public class Doctor_Info extends AppCompatActivity {
 
     }
 
-    public void onItemClicked(Doc_item items) {
-        Intent intent = new Intent(this, Doctor_Info.class);
-
-    }
 }

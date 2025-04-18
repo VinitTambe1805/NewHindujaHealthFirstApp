@@ -1,8 +1,10 @@
 package com.example.hinduja_health_first;
 
 import android.content.Context;
+import android.content.Intent;
 import android.media.RouteListingPreference;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
@@ -31,6 +33,15 @@ public class MyAdapter extends RecyclerView.Adapter<MyViewHolder> {
     public void onBindViewHolder(@NonNull MyViewHolder holder, int position) {
         holder.nameView.setText(items.get(position).getName());
         holder.imageView.setImageResource(items.get(position).getImage());
+
+
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(context,Doctor_Info.class);
+                context.startActivity(i);
+            }
+        });
 
     }
 

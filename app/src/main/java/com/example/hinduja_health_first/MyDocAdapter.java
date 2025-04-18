@@ -34,6 +34,8 @@ public class MyDocAdapter extends RecyclerView.Adapter<MyDocViewHolder> {
         holder.experienceView.setText(items.get(position).getExperience());
         holder.imageView.setImageResource(items.get(position).getImage());
 
+
+
     }
 
     @Override

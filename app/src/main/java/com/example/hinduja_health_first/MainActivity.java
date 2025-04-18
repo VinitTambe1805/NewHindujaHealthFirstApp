@@ -55,6 +55,13 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
+                bookTest.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View v) {
+                        Intent r = new Intent(MainActivity.this, Doctor_Info.class);
+                        startActivity(r);
+                    }
+                });
+
             }
 
 
