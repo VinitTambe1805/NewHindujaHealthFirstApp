@@ -18,7 +18,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/docname"
         android:layout_toEndOf="@+id/docimageview"
-        android:textColor="@color/black"
+        android:textColor="@color/lightblue"
         android:textSize="20dp"
         android:text="Name" />
 
@@ -29,7 +29,7 @@
         android:id="@+id/docSpecs"
         android:layout_below="@id/docname"
         android:layout_toEndOf="@id/docimageview"
-        android:textColor="@color/grey"
+        android:textColor="@color/black"
         android:textSize="20dp"
         android:text="Specialty"/>
 
@@ -39,7 +39,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/docExp"
         android:layout_below="@id/docSpecs"
-        android:textColor="@color/grey"
+        android:textColor="@color/black"
         android:layout_toEndOf="@id/docimageview"
         android:textSize="20dp"
         android:text="Experience"/>
