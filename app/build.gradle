@@ -2,6 +2,13 @@ plugins {
     id  'com.android.application'
     id 'com.google.gms.google-services'
 }
+dependencies {
+    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'com.google.android.gms:play-services-maps:18.1.0'
+    implementation 'com.google.android.gms:play-services-location:21.0.1'
+    implementation 'androidx.fragment:fragment:1.6.2'
+    // ... other dependencies
+}
 
 
 
@@ -50,6 +57,7 @@ dependencies {
     implementation libs.lifecycle.livedata.ktx
     implementation libs.lifecycle.viewmodel.ktx
     implementation libs.firebase.auth
+    implementation libs.play.services.maps
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core

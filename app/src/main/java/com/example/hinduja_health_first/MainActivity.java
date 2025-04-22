@@ -62,6 +62,14 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
+                healthCheckup.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Intent t = new Intent(MainActivity.this, SlotBooking.class);
+                        startActivity(t);
+                    }
+                });
+
             }
 
 

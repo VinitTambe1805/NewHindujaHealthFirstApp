@@ -2,6 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Required permissions -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -12,45 +18,59 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Hinduja_health_First"
         tools:targetApi="31">
+
+        <!-- Google Maps API Key -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyCM_iKNqHztAez-cJ0S4OYtj8GOxaNefao" />
+
+        <!-- Activities -->
         <activity
             android:name=".SlotBooking"
-            android:exported="false" />
+            android:exported="false"
+            android:label="Book Slot" />
+
         <activity
             android:name=".Doctor_Info"
             android:exported="false" />
+
         <activity
             android:name=".RecycleActivity"
             android:exported="false" />
-        <activity
-            android:name=".ui.login.RecycleList"
-            android:exported="false"
-            android:label="@string/title_activity_recycle_list" />
+
+
         <activity
             android:name=".SpecialtyActivity"
             android:exported="false" />
+
         <activity
             android:name=".Splashscreen"
             android:exported="true"
             android:theme="@style/Theme.AppCompat.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".loginActivity"
             android:exported="true" />
-        <activity android:name=".SignUp_activity" />
+
+        <activity
+            android:name=".SignUp_activity"
+            android:exported="false" />
+
         <activity
             android:name=".ForgetPasswordActivity"
             android:exported="false" />
-        <activity android:name=".MainActivity" />
+
         <activity
-            android:name=".BookAppointmentActivity"
-            android:exported="false"
-            android:label="Book Appointment" />
-        <activity android:name=".SpecialitiesActivity" />
+            android:name=".MainActivity"
+            android:exported="false" />
+
+
+
     </application>
 
 </manifest>

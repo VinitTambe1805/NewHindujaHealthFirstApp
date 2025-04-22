@@ -6,6 +6,8 @@
     <color name="lightblue">#74A8E6</color>
     <color name="green">#008000</color>
     <color name="grey">#DAD8D8</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="teal_700">#FF018786</color>
     <color name="lavender">#8692f7</color>
     <color name="darkblue">#044957</color>
     <color name="yellow">#FFFF00</color>
