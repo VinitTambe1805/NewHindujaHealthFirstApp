@@ -22,21 +22,27 @@ import com.google.firebase.database.ValueEventListener;
 
 public class loginActivity extends AppCompatActivity {
 
-   private EditText loginEmail, loginPassword;
+    private EditText loginEmail, loginPassword;
     private Button loginButton;
-
-   private TextView createAccount;
-     DatabaseReference reference;
+    private TextView createAccount;
+    private DatabaseReference reference;
+    private SharedPrefManager sharedPrefManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // Initialize SharedPreferences manager
+        sharedPrefManager = SharedPrefManager.getInstance(this);
+        
+        // Check if user is already logged in
+        if (sharedPrefManager.isLoggedIn()) {
+            startActivity(new Intent(loginActivity.this, MainActivity.class));
+            finish();
+            return;
+        }
+
         setContentView(R.layout.activity_login);
-
-
-
-
-
 
         loginEmail = findViewById(R.id.loginEmail);
         loginPassword = findViewById(R.id.loginPassword);
@@ -45,12 +51,14 @@ public class loginActivity extends AppCompatActivity {
         createAccount = findViewById(R.id.createAccount);
         TextView forgotPassword = findViewById(R.id.text2);
 
-        reference = FirebaseDatabase.getInstance().getReference("users");
-
-
         loginButton.setOnClickListener(v -> {
             String email = loginEmail.getText().toString();
             String password = loginPassword.getText().toString();
+
+            if (email.isEmpty() || password.isEmpty()) {
+                Toast.makeText(loginActivity.this, "Please fill all fields", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
             reference.orderByChild("email").equalTo(email).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
@@ -59,8 +67,10 @@ public class loginActivity extends AppCompatActivity {
                         for (DataSnapshot child : snapshot.getChildren()) {
                             User user = child.getValue(User.class);
                             if (user != null && user.password.equals(password)) {
+                                // Save user data in SharedPreferences
+                                sharedPrefManager.userLogin(user);
+                                
                                 Toast.makeText(loginActivity.this, "Login Successful", Toast.LENGTH_SHORT).show();
-
                                 Intent intent = new Intent(loginActivity.this, MainActivity.class);
                                 startActivity(intent);
                                 finish();
@@ -68,7 +78,6 @@ public class loginActivity extends AppCompatActivity {
                             }
                         }
                         Toast.makeText(loginActivity.this, "Incorrect Password", Toast.LENGTH_SHORT).show();
-                        // Proceed to home screen
                     } else {
                         Toast.makeText(loginActivity.this, "Email not registered", Toast.LENGTH_SHORT).show();
                     }
@@ -77,20 +86,17 @@ public class loginActivity extends AppCompatActivity {
                 @Override
                 public void onCancelled(@NonNull DatabaseError error) {
                     Toast.makeText(loginActivity.this, "Database Error", Toast.LENGTH_SHORT).show();
-
                 }
             });
         });
 
-
         createAccount.setOnClickListener(v -> {
-            Intent intent = new Intent(loginActivity.this,SignUp_activity.class);
+            Intent intent = new Intent(loginActivity.this, SignUp_activity.class);
             startActivity(intent);
-
         });
 
-        forgotPassword.setOnClickListener(v ->{
-           Intent intent = new Intent(loginActivity.this,ForgetPasswordActivity.class);
+        forgotPassword.setOnClickListener(v -> {
+            Intent intent = new Intent(loginActivity.this, ForgetPasswordActivity.class);
             startActivity(intent);
         });
     }
