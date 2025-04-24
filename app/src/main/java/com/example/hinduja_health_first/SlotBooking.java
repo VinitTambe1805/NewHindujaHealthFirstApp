@@ -99,6 +99,7 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
         setupClickListeners();
     }
 
+
     private void initializeViews() {
         pincodeEditText = findViewById(R.id.pincodeEditText);
         submitButton = findViewById(R.id.submitButton);

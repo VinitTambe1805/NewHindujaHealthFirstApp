@@ -39,12 +39,11 @@ public class RecycleActivity extends AppCompatActivity {
         List<item> items = new ArrayList<item>();
         items.add(new item("Cardiologist", R.drawable.c));
         items.add(new item("Dermatologist", R.drawable.dt));
-        items.add(new item("Dermatologist", R.drawable.dm));
         items.add(new item("Diabetologist", R.drawable.db));
         items.add(new item("Gastroenterologist", R.drawable.g));
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(new MyAdapter(getApplicationContext(), items));
+        recyclerView.setAdapter(new MyAdapter(this, items));
 
 
 
