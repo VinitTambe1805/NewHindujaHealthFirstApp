@@ -49,7 +49,7 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
     private static final LatLng HOSPITAL_LOCATION = new LatLng(19.076090, 72.877426);
     private static final int MAX_TRAVEL_TIME_MINUTES = 60; // Maximum acceptable travel time
     private static final int PEAK_HOUR_MORNING_START = 8; // 8 AM
-    private static final int PEAK_HOUR_MORNING_END = 10; // 10 AM
+    private static final int PEAK_HOUR_MORNING_END = 10; // 10 AM   
     private static final int PEAK_HOUR_EVENING_START = 17; // 5 PM
     private static final int PEAK_HOUR_EVENING_END = 19; // 7 PM
     private static final String CHANNEL_ID = "appointment_reminder";
@@ -321,11 +321,24 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 setupMap();
             } else {
                 setupDefaultLocation();
+            }
+        } else if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Retry showing notification after permission is granted
+                String doctorName = getIntent().getStringExtra("DOCTOR_NAME");
+                String specialty = getIntent().getStringExtra("DOCTOR_SPECIALTY");
+                if (doctorName != null && specialty != null) {
+                    showAppointmentNotification(doctorName, specialty);
+                }
+            } else {
+                Toast.makeText(this, "Notification permission is required for appointment reminders",
+                        Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -443,10 +456,12 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = "Appointment Reminders";
             String description = "Notifications for appointment reminders";
-            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            int importance = NotificationManager.IMPORTANCE_HIGH;
 
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
             channel.setDescription(description);
+            channel.enableVibration(true);
+            channel.setVibrationPattern(new long[]{100, 200, 300, 400, 500});
 
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(channel);
@@ -454,10 +469,23 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
     }
 
     private void showAppointmentNotification(String doctorName, String specialty) {
+        // Check for notification permission
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{android.Manifest.permission.POST_NOTIFICATIONS},
+                        PERMISSION_REQUEST_CODE);
+                return;
+            }
+        }
+
         // Create intent for notification click
         Intent intent = new Intent(this, AppointmentSummary.class);
         intent.putExtra("DOCTOR_NAME", doctorName);
         intent.putExtra("DOCTOR_SPECIALTY", specialty);
+        intent.putExtra("APPOINTMENT_TIME", selectedTimeSlot.getText().toString());
+        intent.putExtra("LOCATION", "Hinduja Hospital, Mahim");
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 
         // Create PendingIntent with proper flags
@@ -472,15 +500,18 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
                 .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle("Appointment Confirmed")
                 .setContentText("Your appointment with " + doctorName + " (" + specialty + ") has been confirmed")
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true)
+                .setVibrate(new long[]{100, 200, 300, 400, 500})
                 .setContentIntent(pendingIntent);
 
         // Show notification
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
-                == PackageManager.PERMISSION_GRANTED) {
+        try {
             notificationManager.notify(NOTIFICATION_ID, builder.build());
+            Toast.makeText(this, "Notification sent successfully", Toast.LENGTH_SHORT).show();
+        } catch (SecurityException e) {
+            Toast.makeText(this, "Failed to show notification: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 
