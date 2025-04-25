@@ -1,7 +1,9 @@
 package com.example.hinduja_health_first;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,35 +37,42 @@ public class AppointmentSummary extends AppCompatActivity {
         timeRemainingText = findViewById(R.id.timeRemainingText);
         confirmButton = findViewById(R.id.confirmButton);
 
-        // Get data from intent
+        // Get appointment details from intent
         String doctorName = getIntent().getStringExtra("DOCTOR_NAME");
-        String doctorSpecialty = getIntent().getStringExtra("DOCTOR_SPECIALTY");
-        String selectedTimeSlot = getIntent().getStringExtra("SELECTED_TIME_SLOT");
+        String specialty = getIntent().getStringExtra("DOCTOR_SPECIALTY");
+        String appointmentTime = getIntent().getStringExtra("APPOINTMENT_TIME");
+        String location = getIntent().getStringExtra("LOCATION");
 
-        // Set doctor information
-        doctorNameText.setText(doctorName);
-        doctorSpecialtyText.setText(doctorSpecialty);
-
-        // Set appointment time
-        Calendar calendar = Calendar.getInstance();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.getDefault());
-        String currentDate = dateFormat.format(calendar.getTime());
-        appointmentTimeText.setText("Appointment Time: " + currentDate + " at " + selectedTimeSlot);
+        // Set appointment details
+        if (doctorName != null && specialty != null) {
+            doctorNameText.setText(doctorName);
+            doctorSpecialtyText.setText(specialty);
+            appointmentTimeText.setText(appointmentTime != null ? appointmentTime : "Today at 10:00 AM");
+            timeRemainingText.setText(location != null ? location : "Hinduja Hospital, Mahim");
+        } else {
+            Toast.makeText(this, "No appointment details found", Toast.LENGTH_SHORT).show();
+            finish();
+        }
 
         // Calculate appointment time in milliseconds
-        appointmentTimeMillis = calculateAppointmentTimeMillis(selectedTimeSlot);
+        appointmentTimeMillis = calculateAppointmentTimeMillis("10:00 AM");
 
         // Start countdown timer
         startCountdownTimer();
 
-        // Set confirm button click listener
-        confirmButton.setOnClickListener(v -> {
-            // Stop the countdown timer
-            if (countDownTimer != null) {
-                countDownTimer.cancel();
+        // Set up confirm button click listener
+        confirmButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Show confirmation message
+                Toast.makeText(AppointmentSummary.this, "Appointment confirmed successfully!", Toast.LENGTH_LONG).show();
+                
+                // Create intent for MainActivity
+                Intent intent = new Intent(AppointmentSummary.this, MainActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                finish();
             }
-            Toast.makeText(this, "Appointment confirmed!", Toast.LENGTH_SHORT).show();
-            finish();
         });
     }
 

@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/img3"
     android:fillViewport="true">
 
     <LinearLayout
@@ -18,12 +19,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
-            android:padding="16dp"
             android:background="@drawable/rounded_corner"
-            android:textSize="16sp"
+            android:gravity="center"
+            android:padding="16dp"
             android:textColor="@color/black"
-            android:textStyle="bold"
-            android:gravity="center"/>
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
         <TextView
             android:layout_width="match_parent"

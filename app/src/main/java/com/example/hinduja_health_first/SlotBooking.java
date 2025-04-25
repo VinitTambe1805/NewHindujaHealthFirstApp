@@ -1,12 +1,16 @@
 package com.example.hinduja_health_first;
 
 import android.Manifest;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
@@ -16,6 +20,9 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.core.app.PendingIntentCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -45,6 +52,9 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
     private static final int PEAK_HOUR_MORNING_END = 10; // 10 AM
     private static final int PEAK_HOUR_EVENING_START = 17; // 5 PM
     private static final int PEAK_HOUR_EVENING_END = 19; // 7 PM
+    private static final String CHANNEL_ID = "appointment_reminder";
+    private static final int NOTIFICATION_ID = 1;
+    private static final int PERMISSION_REQUEST_CODE = 1001;
 
     private GoogleMap mMap;
     private FusedLocationProviderClient fusedLocationClient;
@@ -71,18 +81,20 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_slot_booking);
 
-        // Get doctor information from intent
-        Intent intent = getIntent();
-        String doctorName = intent.getStringExtra("DOCTOR_NAME");
-        String doctorSpecialty = intent.getStringExtra("DOCTOR_SPECIALTY");
-        String doctorExperience = intent.getStringExtra("DOCTOR_EXPERIENCE");
+        // Create notification channel
+        createNotificationChannel();
 
-        // Initialize doctor info text view
+        // Get doctor's information from intent
+        String doctorName = getIntent().getStringExtra("DOCTOR_NAME");
+        String doctorSpecialty = getIntent().getStringExtra("DOCTOR_SPECIALTY");
+        String doctorExperience = getIntent().getStringExtra("DOCTOR_EXPERIENCE");
+
+        // Display doctor's information
         doctorInfoText = findViewById(R.id.doctorInfoText);
         if (doctorInfoText != null && doctorName != null) {
             String doctorInfo = "Doctor: " + doctorName + "\n" +
-                              "Specialty: " + doctorSpecialty + "\n" +
-                              "Experience: " + doctorExperience;
+                    "Specialty: " + doctorSpecialty + "\n" +
+                    "Experience: " + doctorExperience;
             doctorInfoText.setText(doctorInfo);
         }
 
@@ -115,7 +127,6 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
         // Set up click listeners
         setupClickListeners();
     }
-
 
     private void initializeViews() {
         pincodeEditText = findViewById(R.id.pincodeEditText);
@@ -162,7 +173,7 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
                     Calendar calendar = Calendar.getInstance();
                     int currentHour = calendar.get(Calendar.HOUR_OF_DAY);
                     isPeakHour = (currentHour >= PEAK_HOUR_MORNING_START && currentHour <= PEAK_HOUR_MORNING_END) ||
-                                (currentHour >= PEAK_HOUR_EVENING_START && currentHour <= PEAK_HOUR_EVENING_END);
+                            (currentHour >= PEAK_HOUR_EVENING_START && currentHour <= PEAK_HOUR_EVENING_END);
 
                     // Calculate travel time based on distance
                     float[] results = new float[1];
@@ -171,7 +182,7 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
                             HOSPITAL_LOCATION.latitude, HOSPITAL_LOCATION.longitude,
                             results
                     );
-                    
+
                     // Convert distance to estimated travel time (assuming average speed of 30 km/h)
                     double distanceInKm = results[0] / 1000;
                     estimatedTravelTime = (distanceInKm / 30.0) * 60; // Convert to minutes
@@ -204,7 +215,7 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
     private void updateTimeSlots() {
         Calendar calendar = Calendar.getInstance();
         int currentHour = calendar.get(Calendar.HOUR_OF_DAY);
-        
+
         String[] slotsToShow;
         String titleText;
 
@@ -412,15 +423,65 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
         // Get doctor information from intent
         String doctorName = getIntent().getStringExtra("DOCTOR_NAME");
         String doctorSpecialty = getIntent().getStringExtra("DOCTOR_SPECIALTY");
+        String selectedTime = selectedTimeSlot.getText().toString();
 
         // Create intent for AppointmentSummary activity
         Intent intent = new Intent(this, AppointmentSummary.class);
         intent.putExtra("DOCTOR_NAME", doctorName);
         intent.putExtra("DOCTOR_SPECIALTY", doctorSpecialty);
-        intent.putExtra("SELECTED_TIME_SLOT", selectedTimeSlot.getText().toString());
+        intent.putExtra("APPOINTMENT_TIME", selectedTime);
+        intent.putExtra("LOCATION", "Hinduja Hospital, Mahim");
+
+        // Show appointment confirmation notification
+        showAppointmentNotification(doctorName, doctorSpecialty);
 
         // Start the AppointmentSummary activity
         startActivity(intent);
+    }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "Appointment Reminders";
+            String description = "Notifications for appointment reminders";
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            channel.setDescription(description);
+
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    private void showAppointmentNotification(String doctorName, String specialty) {
+        // Create intent for notification click
+        Intent intent = new Intent(this, AppointmentSummary.class);
+        intent.putExtra("DOCTOR_NAME", doctorName);
+        intent.putExtra("DOCTOR_SPECIALTY", specialty);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
+        // Create PendingIntent with proper flags
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            flags |= PendingIntent.FLAG_IMMUTABLE;
+        }
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, flags);
+
+        // Build notification
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_notification)
+                .setContentTitle("Appointment Confirmed")
+                .setContentText("Your appointment with " + doctorName + " (" + specialty + ") has been confirmed")
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent);
+
+        // Show notification
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
+                == PackageManager.PERMISSION_GRANTED) {
+            notificationManager.notify(NOTIFICATION_ID, builder.build());
+        }
     }
 
     @Override

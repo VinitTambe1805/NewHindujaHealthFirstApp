@@ -2,6 +2,7 @@ package com.example.hinduja_health_first;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -9,18 +10,21 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.SearchView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
     private SearchView searchView;
     private Button bookAppoint, bookTest, healthBlog, healthCheckup;
     private String[] hospitals = {"Hinduja Hospital Mahim (West)", "Hinduja Hospital Khar(West)"};
     private AutoCompleteTextView autoCompleteTextView;
     private ArrayAdapter<String> adapterItems;
     private SharedPrefManager sharedPrefManager;
+    private ImageButton notificationIcon;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
         bookTest = findViewById(R.id.book_services);
         healthBlog = findViewById(R.id.health_blog);
         healthCheckup = findViewById(R.id.health_checkup);
+        notificationIcon = findViewById(R.id.notification_icon);
 
         // Setup hospital dropdown
         setupHospitalDropdown();
@@ -53,6 +58,41 @@ public class MainActivity extends AppCompatActivity {
 
         // Setup button click listeners
         setupButtonClickListeners();
+
+        // Setup notification icon click listener
+        setupNotificationIcon();
+    }
+
+    private void setupNotificationIcon() {
+        if (notificationIcon == null) {
+            Log.e(TAG, "Notification icon is null");
+            return;
+        }
+
+        notificationIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    Log.d(TAG, "Notification icon clicked");
+                    
+                    // Check if user is logged in
+                    if (!sharedPrefManager.isLoggedIn()) {
+                        Toast.makeText(MainActivity.this, "Please login to view appointments", 
+                            Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(MainActivity.this, loginActivity.class));
+                        return;
+                    }
+
+                    // Start AppointmentSummary activity
+                    Intent intent = new Intent(MainActivity.this, AppointmentSummary.class);
+                    startActivity(intent);
+                } catch (Exception e) {
+                    Log.e(TAG, "Error opening appointments: " + e.getMessage(), e);
+                    Toast.makeText(MainActivity.this, "Error opening appointments: " + e.getMessage(), 
+                        Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     private void setupHospitalDropdown() {
