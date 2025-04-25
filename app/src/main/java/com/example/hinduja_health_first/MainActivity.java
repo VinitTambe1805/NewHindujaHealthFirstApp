@@ -17,7 +17,7 @@ import androidx.appcompat.app.AppCompatActivity;
 public class MainActivity extends AppCompatActivity {
     private SearchView searchView;
     private Button bookAppoint, bookTest, healthBlog, healthCheckup;
-    private String[] item = {"Hinduja Hospital Mahim (West)", "Hinduja Hospital Khar(West)"};
+    private String[] hospitals = {"Hinduja Hospital Mahim (West)", "Hinduja Hospital Khar(West)"};
     private AutoCompleteTextView autoCompleteTextView;
     private ArrayAdapter<String> adapterItems;
     private SharedPrefManager sharedPrefManager;
@@ -45,29 +45,104 @@ public class MainActivity extends AppCompatActivity {
         healthBlog = findViewById(R.id.health_blog);
         healthCheckup = findViewById(R.id.health_checkup);
 
+        // Setup hospital dropdown
+        setupHospitalDropdown();
+
+        // Setup search functionality
+        setupSearchView();
+
+        // Setup button click listeners
+        setupButtonClickListeners();
+    }
+
+    private void setupHospitalDropdown() {
         autoCompleteTextView = findViewById(R.id.auto_complete_txt);
-        adapterItems = new ArrayAdapter<String>(this, R.layout.list_item, item);
+        adapterItems = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, hospitals);
         autoCompleteTextView.setAdapter(adapterItems);
-
-        autoCompleteTextView.setOnItemClickListener((adapterView, view, i, l) -> {
-            String item = adapterView.getItemAtPosition(i).toString();
-            Toast.makeText(MainActivity.this, "Hospital:" + item, Toast.LENGTH_SHORT).show();
-
-            bookAppoint.setOnClickListener(v -> {
-                Intent intent = new Intent(MainActivity.this, RecycleActivity.class);
-                startActivity(intent);
-            });
-
-            bookTest.setOnClickListener(v -> {
-                Intent intent = new Intent(MainActivity.this, Doctor_Info.class);
-                startActivity(intent);
-            });
-
-            healthCheckup.setOnClickListener(v -> {
-                Intent intent = new Intent(MainActivity.this, SlotBooking.class);
-                startActivity(intent);
-            });
+        
+        // Set threshold to show suggestions after 1 character
+        autoCompleteTextView.setThreshold(1);
+        
+        // Handle item selection
+        autoCompleteTextView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String selectedHospital = (String) parent.getItemAtPosition(position);
+                Toast.makeText(MainActivity.this, "Selected: " + selectedHospital, Toast.LENGTH_SHORT).show();
+            }
         });
+    }
+
+    private void setupButtonClickListeners() {
+        bookAppoint.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, RecycleActivity.class);
+            startActivity(intent);
+        });
+
+        bookTest.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, Doctor_Info.class);
+            startActivity(intent);
+        });
+
+        healthCheckup.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, SlotBooking.class);
+            startActivity(intent);
+        });
+    }
+
+    private void setupSearchView() {
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                performSearch(query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                if (newText.length() > 0) {
+                    performSearch(newText);
+                }
+                return true;
+            }
+        });
+
+        // Set search view properties
+        searchView.setIconifiedByDefault(false);
+        searchView.setQueryHint("Search hospitals, doctors, services...");
+        searchView.setSubmitButtonEnabled(true);
+    }
+
+    private void performSearch(String query) {
+        query = query.toLowerCase().trim();
+        
+        // Filter hospitals in the dropdown
+        if (query.length() > 0) {
+            String[] filteredHospitals = new String[hospitals.length];
+            int count = 0;
+            for (String hospital : hospitals) {
+                if (hospital.toLowerCase().contains(query)) {
+                    filteredHospitals[count++] = hospital;
+                }
+            }
+            String[] result = new String[count];
+            System.arraycopy(filteredHospitals, 0, result, 0, count);
+            adapterItems = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, result);
+            autoCompleteTextView.setAdapter(adapterItems);
+            autoCompleteTextView.showDropDown();
+        } else {
+            adapterItems = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, hospitals);
+            autoCompleteTextView.setAdapter(adapterItems);
+        }
+
+        // Check for action keywords
+        if (query.contains("doctor") || query.contains("appointment")) {
+            startActivity(new Intent(this, RecycleActivity.class));
+        } else if (query.contains("test") || query.contains("service")) {
+            startActivity(new Intent(this, Doctor_Info.class));
+        } else if (query.contains("checkup") || query.contains("health")) {
+            startActivity(new Intent(this, SlotBooking.class));
+        }
     }
 
     @Override

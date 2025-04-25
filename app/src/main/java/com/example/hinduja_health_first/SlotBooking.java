@@ -1,6 +1,7 @@
 package com.example.hinduja_health_first;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.location.Address;
@@ -53,6 +54,7 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
     private MaterialButton[] timeSlots = new MaterialButton[4];
     private MaterialButton selectedTimeSlot = null;
     private TextView movePinText;
+    private TextView doctorInfoText;
     private LatLng selectedLocation;
     private ExecutorService executorService;
     private Geocoder geocoder;
@@ -68,6 +70,21 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_slot_booking);
+
+        // Get doctor information from intent
+        Intent intent = getIntent();
+        String doctorName = intent.getStringExtra("DOCTOR_NAME");
+        String doctorSpecialty = intent.getStringExtra("DOCTOR_SPECIALTY");
+        String doctorExperience = intent.getStringExtra("DOCTOR_EXPERIENCE");
+
+        // Initialize doctor info text view
+        doctorInfoText = findViewById(R.id.doctorInfoText);
+        if (doctorInfoText != null && doctorName != null) {
+            String doctorInfo = "Doctor: " + doctorName + "\n" +
+                              "Specialty: " + doctorSpecialty + "\n" +
+                              "Experience: " + doctorExperience;
+            doctorInfoText.setText(doctorInfo);
+        }
 
         // Initialize Geocoder
         geocoder = new Geocoder(this, Locale.getDefault());
@@ -392,15 +409,18 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
             return;
         }
 
-        String timeSlot = selectedTimeSlot.getText().toString();
-        String message = "Selected time: " + timeSlot;
-        if (selectedLocation != null) {
-            message += "\nLocation: " + selectedLocation.latitude + ", " + selectedLocation.longitude;
-        } else {
-            message += "\nPincode: " + pincodeEditText.getText().toString();
-        }
+        // Get doctor information from intent
+        String doctorName = getIntent().getStringExtra("DOCTOR_NAME");
+        String doctorSpecialty = getIntent().getStringExtra("DOCTOR_SPECIALTY");
 
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+        // Create intent for AppointmentSummary activity
+        Intent intent = new Intent(this, AppointmentSummary.class);
+        intent.putExtra("DOCTOR_NAME", doctorName);
+        intent.putExtra("DOCTOR_SPECIALTY", doctorSpecialty);
+        intent.putExtra("SELECTED_TIME_SLOT", selectedTimeSlot.getText().toString());
+
+        // Start the AppointmentSummary activity
+        startActivity(intent);
     }
 
     @Override

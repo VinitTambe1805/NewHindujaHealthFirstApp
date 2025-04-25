@@ -6,6 +6,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -13,7 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
-public class MyAdapter extends RecyclerView.Adapter<MyViewHolder> {
+public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
     private static final String TAG = "MyAdapter";
     Context context;
     List<item> items;
@@ -26,13 +28,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyViewHolder> {
     @NonNull
     @Override
     public MyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        try {
-            return new MyViewHolder(LayoutInflater.from(context).inflate(R.layout.item_view, parent, false));
-        } catch (Exception e) {
-            Log.e(TAG, "Error in onCreateViewHolder: " + e.getMessage(), e);
-            Toast.makeText(context, "Error creating view: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-            throw e;
-        }
+        return new MyViewHolder(LayoutInflater.from(context).inflate(R.layout.item_view, parent, false));
     }
 
     @Override
@@ -66,5 +62,21 @@ public class MyAdapter extends RecyclerView.Adapter<MyViewHolder> {
     @Override
     public int getItemCount() {
         return items.size();
+    }
+
+    public void updateList(List<item> newList) {
+        items = newList;
+        notifyDataSetChanged();
+    }
+
+    public static class MyViewHolder extends RecyclerView.ViewHolder {
+        ImageView imageView;
+        TextView nameView;
+
+        public MyViewHolder(@NonNull View itemView) {
+            super(itemView);
+            imageView = itemView.findViewById(R.id.Imageview);
+            nameView = itemView.findViewById(R.id.name);
+        }
     }
 }
