@@ -13,11 +13,36 @@ import java.util.List;
 
 public class FirebaseDatabaseHelper {
     private static final String TAG = "FirebaseDatabaseHelper";
-    private DatabaseReference databaseReference;
     private static FirebaseDatabaseHelper instance;
+    private final DatabaseReference databaseReference;
+
+    // Database paths
+    private static final String APPOINTMENTS_PATH = "appointments";
+    private static final String BOOKED_SLOTS_PATH = "booked_slots";
+
+    // Interface for time slot availability check
+    public interface OnTimeSlotCheckListener {
+        void onTimeSlotChecked(boolean isAvailable);
+    }
+
+    // Interface for operation completion
+    public interface OnCompleteListener {
+        void onSuccess();
+        void onFailure(Exception e);
+    }
+
+    // Interface for appointments loaded
+    public interface OnAppointmentsLoadedListener {
+        void onAppointmentsLoaded(List<Patient> appointments);
+    }
 
     private FirebaseDatabaseHelper() {
-        databaseReference = FirebaseDatabase.getInstance().getReference();
+        try {
+            databaseReference = FirebaseDatabase.getInstance().getReference();
+        } catch (Exception e) {
+            Log.e(TAG, "Error initializing Firebase: " + e.getMessage());
+            throw new RuntimeException("Failed to initialize Firebase", e);
+        }
     }
 
     public static synchronized FirebaseDatabaseHelper getInstance() {
@@ -27,44 +52,22 @@ public class FirebaseDatabaseHelper {
         return instance;
     }
 
-    // Save patient appointment
-    public void savePatientAppointment(Patient patient, OnCompleteListener listener) {
-        String appointmentKey = databaseReference.child("appointments").push().getKey();
-        patient.setPatientId(appointmentKey);
-        
-        databaseReference.child("appointments").child(appointmentKey)
-            .setValue(patient)
-            .addOnCompleteListener(task -> {
-                if (task.isSuccessful()) {
-                    // Also save the time slot as booked
-                    saveBookedTimeSlot(patient.getDoctorName(), 
-                                     patient.getAppointmentDate(), 
-                                     patient.getAppointmentTime());
-                    listener.onSuccess();
-                } else {
-                    listener.onFailure(task.getException());
-                }
-            });
-    }
+    public void checkTimeSlotAvailability(String doctorName, String date, String timeSlot, 
+            OnTimeSlotCheckListener listener) {
+        if (doctorName == null || date == null || timeSlot == null) {
+            Log.e(TAG, "Invalid parameters for time slot check");
+            listener.onTimeSlotChecked(false);
+            return;
+        }
 
-    // Save booked time slot
-    private void saveBookedTimeSlot(String doctorName, String date, String time) {
-        String timeSlotKey = doctorName + "_" + date + "_" + time;
-        databaseReference.child("booked_slots").child(timeSlotKey)
-            .setValue(true);
-    }
-
-    // Check if time slot is available
-    public void checkTimeSlotAvailability(String doctorName, String date, String time, 
-                                        OnTimeSlotCheckListener listener) {
-        String timeSlotKey = doctorName + "_" + date + "_" + time;
+        String slotKey = generateSlotKey(doctorName, date, timeSlot);
         
-        databaseReference.child("booked_slots").child(timeSlotKey)
+        databaseReference.child(BOOKED_SLOTS_PATH)
+            .child(slotKey)
             .addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
-                    boolean isBooked = dataSnapshot.exists();
-                    listener.onTimeSlotChecked(!isBooked);
+                    listener.onTimeSlotChecked(!dataSnapshot.exists());
                 }
 
                 @Override
@@ -75,9 +78,67 @@ public class FirebaseDatabaseHelper {
             });
     }
 
-    // Get all appointments for a patient
+    public void savePatientAppointment(Patient patient, OnCompleteListener listener) {
+        if (patient == null) {
+            Log.e(TAG, "Patient object is null");
+            listener.onFailure(new IllegalArgumentException("Patient object cannot be null"));
+            return;
+        }
+
+        try {
+            // Generate a unique key for the appointment
+            String appointmentId = databaseReference.child(APPOINTMENTS_PATH).push().getKey();
+            if (appointmentId == null) {
+                throw new RuntimeException("Failed to generate appointment ID");
+            }
+            patient.setId(appointmentId);
+
+            // Save appointment details
+            databaseReference.child(APPOINTMENTS_PATH)
+                .child(appointmentId)
+                .setValue(patient)
+                .addOnSuccessListener(aVoid -> {
+                    // Mark the slot as booked
+                    String slotKey = generateSlotKey(
+                        patient.getDoctorName(),
+                        patient.getAppointmentDate(),
+                        patient.getAppointmentTime()
+                    );
+                    
+                    databaseReference.child(BOOKED_SLOTS_PATH)
+                        .child(slotKey)
+                        .setValue(true)
+                        .addOnSuccessListener(aVoid1 -> listener.onSuccess())
+                        .addOnFailureListener(e -> {
+                            Log.e(TAG, "Error saving booked slot: " + e.getMessage());
+                            listener.onFailure(e);
+                        });
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error saving appointment: " + e.getMessage());
+                    listener.onFailure(e);
+                });
+        } catch (Exception e) {
+            Log.e(TAG, "Error in savePatientAppointment: " + e.getMessage());
+            listener.onFailure(e);
+        }
+    }
+
+    private String generateSlotKey(String doctorName, String date, String timeSlot) {
+        if (doctorName == null || date == null || timeSlot == null) {
+            throw new IllegalArgumentException("Parameters cannot be null");
+        }
+        return doctorName + "_" + date + "_" + timeSlot.replace(":", "_");
+    }
+
     public void getPatientAppointments(String patientEmail, OnAppointmentsLoadedListener listener) {
-        databaseReference.child("appointments")
+        if (patientEmail == null || patientEmail.isEmpty()) {
+            Log.e(TAG, "Invalid patient email");
+            listener.onAppointmentsLoaded(new ArrayList<>());
+            return;
+        }
+
+        databaseReference.child(APPOINTMENTS_PATH)
             .orderByChild("email")
             .equalTo(patientEmail)
             .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -85,9 +146,13 @@ public class FirebaseDatabaseHelper {
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     List<Patient> appointments = new ArrayList<>();
                     for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                        Patient appointment = snapshot.getValue(Patient.class);
-                        if (appointment != null) {
-                            appointments.add(appointment);
+                        try {
+                            Patient appointment = snapshot.getValue(Patient.class);
+                            if (appointment != null) {
+                                appointments.add(appointment);
+                            }
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error parsing appointment: " + e.getMessage());
                         }
                     }
                     listener.onAppointmentsLoaded(appointments);
@@ -99,19 +164,5 @@ public class FirebaseDatabaseHelper {
                     listener.onAppointmentsLoaded(new ArrayList<>());
                 }
             });
-    }
-
-    // Interfaces for callbacks
-    public interface OnCompleteListener {
-        void onSuccess();
-        void onFailure(Exception e);
-    }
-
-    public interface OnTimeSlotCheckListener {
-        void onTimeSlotChecked(boolean isAvailable);
-    }
-
-    public interface OnAppointmentsLoadedListener {
-        void onAppointmentsLoaded(List<Patient> appointments);
     }
 } 

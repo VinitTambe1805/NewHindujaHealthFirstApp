@@ -1,9 +1,12 @@
 package com.example.hinduja_health_first;
 
+import static android.content.ContentValues.TAG;
+
 import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
@@ -12,6 +15,7 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -24,6 +28,7 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.core.app.PendingIntentCompat;
 
+import com.example.hinduja_health_first.ui.login.LoginActivity;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -37,6 +42,8 @@ import com.google.android.material.textfield.TextInputEditText;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -67,7 +74,7 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
     private MaterialButton submitButton;
     private MaterialButton saveButton;
     private MaterialButton[] timeSlots = new MaterialButton[4];
-    private MaterialButton selectedTimeSlot = null;
+    private MaterialButton selectedTimeSlotButton;
     private TextView movePinText;
     private TextView doctorInfoText;
     private LatLng selectedLocation;
@@ -82,10 +89,12 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
     private final String[] eveningSlots = {"4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM"};
 
     private FirebaseAuth mAuth;
+    private FirebaseUser currentUser;
     private FirebaseDatabaseHelper databaseHelper;
     private String selectedDoctorName;
     private String selectedSpecialty;
-    private String selectedTimeSlot;
+    private String selectedTimeSlotString;
+    private String selectedDate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,13 +105,28 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
         createNotificationChannel();
 
         // Initialize Firebase
-        mAuth = FirebaseAuth.getInstance();
-        databaseHelper = FirebaseDatabaseHelper.getInstance();
+        try {
+            mAuth = FirebaseAuth.getInstance();
+            currentUser = mAuth.getCurrentUser();
+            databaseHelper = FirebaseDatabaseHelper.getInstance();
+        } catch (Exception e) {
+            Log.e(TAG, "Error initializing Firebase: " + e.getMessage());
+            Toast.makeText(this, "Error initializing app. Please try again later.", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
 
         // Get doctor's information from intent
         selectedDoctorName = getIntent().getStringExtra("DOCTOR_NAME");
         selectedSpecialty = getIntent().getStringExtra("DOCTOR_SPECIALTY");
+        selectedDate = getIntent().getStringExtra("SELECTED_DATE");
         String doctorExperience = getIntent().getStringExtra("DOCTOR_EXPERIENCE");
+
+        if (selectedDoctorName == null || selectedSpecialty == null || selectedDate == null) {
+            Toast.makeText(this, "Invalid doctor information", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
 
         // Display doctor's information
         doctorInfoText = findViewById(R.id.doctorInfoText);
@@ -422,23 +446,168 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
     }
 
     private void selectTimeSlot(MaterialButton selectedSlot) {
-        // Reset all buttons to default state
-        int defaultColor = ContextCompat.getColor(this, R.color.black);
-        int selectedColor = ContextCompat.getColor(this, R.color.teal_700);
+        try {
+            if (selectedSlot == null) {
+                return;
+            }
 
-        for (MaterialButton slot : timeSlots) {
-            slot.setStrokeColor(ColorStateList.valueOf(defaultColor));
-            slot.setTextColor(defaultColor);
+            // Reset all buttons to default state
+            int defaultColor = ContextCompat.getColor(this, R.color.black);
+            int selectedColor = ContextCompat.getColor(this, R.color.teal_700);
+
+            for (MaterialButton slot : timeSlots) {
+                if (slot != null) {
+                    slot.setStrokeColor(ColorStateList.valueOf(defaultColor));
+                    slot.setTextColor(defaultColor);
+                }
+            }
+
+            // Highlight selected button
+            selectedSlot.setStrokeColor(ColorStateList.valueOf(selectedColor));
+            selectedSlot.setTextColor(selectedColor);
+            selectedTimeSlotString = selectedSlot.getText().toString();
+            selectedTimeSlotButton = selectedSlot;
+
+            // Check if user is logged in
+            if (currentUser == null) {
+                startActivity(new Intent(this, LoginActivity.class));
+                return;
+            }
+
+            // Check if pincode is entered
+            if (pincodeEditText.getText() == null || pincodeEditText.getText().toString().isEmpty()) {
+                return;
+            }
+
+            // Check if database helper is initialized
+            if (databaseHelper == null) {
+                return;
+            }
+
+            // Check time slot availability
+            checkTimeSlotAvailability();
+        } catch (Exception e) {
+            Log.e(TAG, "Error in selectTimeSlot: " + e.getMessage());
+        }
+    }
+
+    private void checkTimeSlotAvailability() {
+        try {
+            if (selectedDoctorName == null || selectedDate == null || selectedTimeSlotString == null) {
+                Toast.makeText(this, "Please select all required fields", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (databaseHelper == null) {
+                Toast.makeText(this, "Please try again later", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Show loading indicator
+            ProgressDialog progressDialog = new ProgressDialog(this);
+            progressDialog.setMessage("Checking slot availability...");
+            progressDialog.setCancelable(false);
+            progressDialog.show();
+
+            databaseHelper.checkTimeSlotAvailability(selectedDoctorName, selectedDate, selectedTimeSlotString,
+                new FirebaseDatabaseHelper.OnTimeSlotCheckListener() {
+                    @Override
+                    public void onTimeSlotChecked(boolean isAvailable) {
+                        try {
+                            if (progressDialog != null && progressDialog.isShowing()) {
+                                progressDialog.dismiss();
+                            }
+                            
+                            if (isAvailable) {
+                                // Slot is available, proceed with booking
+                                bookAppointment();
+                            } else {
+                                Toast.makeText(SlotBooking.this, 
+                                    "This time slot is no longer available. Please select another slot.", 
+                                    Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error in onTimeSlotChecked: " + e.getMessage());
+                            if (progressDialog != null && progressDialog.isShowing()) {
+                                progressDialog.dismiss();
+                            }
+                            Toast.makeText(SlotBooking.this, 
+                                "Please try selecting another slot", 
+                                Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+        } catch (Exception e) {
+            Log.e(TAG, "Error in checkTimeSlotAvailability: " + e.getMessage());
+            Toast.makeText(this, "Please try again", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void bookAppointment() {
+        if (currentUser == null) {
+            Toast.makeText(this, "Please login to book an appointment", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(this, LoginActivity.class));
+            return;
         }
 
-        // Highlight selected button
-        selectedSlot.setStrokeColor(ColorStateList.valueOf(selectedColor));
-        selectedSlot.setTextColor(selectedColor);
-        selectedTimeSlot = selectedSlot.getText().toString();
+        // Show loading indicator
+        ProgressDialog progressDialog = new ProgressDialog(this);
+        progressDialog.setMessage("Booking your appointment...");
+        progressDialog.show();
+
+        try {
+            // Create patient object
+            Patient patient = new Patient(
+                null, // ID will be set by Firebase
+                currentUser.getDisplayName(),
+                currentUser.getEmail(),
+                currentUser.getPhoneNumber(),
+                selectedDoctorName,
+                selectedSpecialty,
+                selectedDate,
+                selectedTimeSlotString
+            );
+
+            // Save appointment to Firebase
+            databaseHelper.savePatientAppointment(patient, new FirebaseDatabaseHelper.OnCompleteListener() {
+                @Override
+                public void onSuccess() {
+                    progressDialog.dismiss();
+                    // Show success message
+                    Toast.makeText(SlotBooking.this, 
+                        "Appointment booked successfully!", 
+                        Toast.LENGTH_SHORT).show();
+
+                    // Show notification
+                    showAppointmentNotification(selectedDoctorName, selectedSpecialty);
+
+                    // Navigate to appointment summary
+                    Intent intent = new Intent(SlotBooking.this, AppointmentSummary.class);
+                    intent.putExtra("DOCTOR_NAME", selectedDoctorName);
+                    intent.putExtra("DOCTOR_SPECIALTY", selectedSpecialty);
+                    intent.putExtra("APPOINTMENT_TIME", selectedTimeSlotString);
+                    intent.putExtra("APPOINTMENT_DATE", selectedDate);
+                    intent.putExtra("LOCATION", "Hinduja Hospital, Mahim");
+                    startActivity(intent);
+                    finish();
+                }
+
+                @Override
+                public void onFailure(Exception e) {
+                    progressDialog.dismiss();
+                    Toast.makeText(SlotBooking.this, 
+                        "Failed to book appointment: " + e.getMessage(), 
+                        Toast.LENGTH_SHORT).show();
+                }
+            });
+        } catch (Exception e) {
+            progressDialog.dismiss();
+            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void saveAndContinue() {
-        if (selectedTimeSlot == null) {
+        if (selectedTimeSlotString == null) {
             Toast.makeText(this, "Please select a time slot", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -451,7 +620,7 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
         // Get doctor information from intent
         String doctorName = getIntent().getStringExtra("DOCTOR_NAME");
         String doctorSpecialty = getIntent().getStringExtra("DOCTOR_SPECIALTY");
-        String selectedTime = selectedTimeSlot;
+        String selectedTime = selectedTimeSlotString;
 
         // Create intent for AppointmentSummary activity
         Intent intent = new Intent(this, AppointmentSummary.class);
@@ -499,7 +668,7 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
         Intent intent = new Intent(this, AppointmentSummary.class);
         intent.putExtra("DOCTOR_NAME", doctorName);
         intent.putExtra("DOCTOR_SPECIALTY", specialty);
-        intent.putExtra("APPOINTMENT_TIME", selectedTimeSlot);
+        intent.putExtra("APPOINTMENT_TIME", selectedTimeSlotString);
         intent.putExtra("LOCATION", "Hinduja Hospital, Mahim");
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 
