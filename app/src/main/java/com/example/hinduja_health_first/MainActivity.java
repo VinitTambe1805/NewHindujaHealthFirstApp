@@ -15,6 +15,10 @@ import android.widget.SearchView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
@@ -25,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private ArrayAdapter<String> adapterItems;
     private SharedPrefManager sharedPrefManager;
     private ImageButton notificationIcon;
+    private boolean isAppointmentFragmentVisible = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +66,11 @@ public class MainActivity extends AppCompatActivity {
 
         // Setup notification icon click listener
         setupNotificationIcon();
+
+        // Check if we have appointment data from notification
+        if (getIntent().hasExtra("DOCTOR_NAME")) {
+            showAppointmentFragment(getIntent().getExtras());
+        }
     }
 
     private void setupNotificationIcon() {
@@ -83,9 +93,16 @@ public class MainActivity extends AppCompatActivity {
                         return;
                     }
 
-                    // Start AppointmentSummary activity
-                    Intent intent = new Intent(MainActivity.this, AppointmentSummary.class);
-                    startActivity(intent);
+                    // Check if there are any appointments
+                    List<SharedPrefManager.Appointment> appointments = sharedPrefManager.getAllAppointments();
+                    if (!appointments.isEmpty()) {
+                        // Start AppointmentDetailsActivity
+                        Intent intent = new Intent(MainActivity.this, AppointmentDetailsActivity.class);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(MainActivity.this, "No appointments found", 
+                            Toast.LENGTH_SHORT).show();
+                    }
                 } catch (Exception e) {
                     Log.e(TAG, "Error opening appointments: " + e.getMessage(), e);
                     Toast.makeText(MainActivity.this, "Error opening appointments: " + e.getMessage(), 
@@ -93,6 +110,29 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    private void showAppointmentFragment(Bundle args) {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction transaction = fragmentManager.beginTransaction();
+
+        if (isAppointmentFragmentVisible) {
+            // If fragment is already visible, remove it
+            AppointmentFragment existingFragment = (AppointmentFragment) 
+                fragmentManager.findFragmentByTag("APPOINTMENT_FRAGMENT");
+            if (existingFragment != null) {
+                transaction.remove(existingFragment);
+                isAppointmentFragmentVisible = false;
+            }
+        } else {
+            // Show the appointment fragment
+            AppointmentFragment fragment = new AppointmentFragment();
+            fragment.setArguments(args);
+            transaction.add(R.id.fragment_container, fragment, "APPOINTMENT_FRAGMENT");
+            isAppointmentFragmentVisible = true;
+        }
+
+        transaction.commit();
     }
 
     private void setupHospitalDropdown() {

@@ -31,10 +31,10 @@ public class loginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+
         // Initialize SharedPreferences manager
         sharedPrefManager = SharedPrefManager.getInstance(this);
-        
+
         // Check if user is already logged in
         if (sharedPrefManager.isLoggedIn()) {
             startActivity(new Intent(loginActivity.this, MainActivity.class));
@@ -69,7 +69,7 @@ public class loginActivity extends AppCompatActivity {
                             if (user != null && user.password.equals(password)) {
                                 // Save user data in SharedPreferences
                                 sharedPrefManager.userLogin(user);
-                                
+
                                 Toast.makeText(loginActivity.this, "Login Successful", Toast.LENGTH_SHORT).show();
                                 Intent intent = new Intent(loginActivity.this, MainActivity.class);
                                 startActivity(intent);

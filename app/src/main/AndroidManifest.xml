@@ -75,7 +75,10 @@
             android:name=".MainActivity"
             android:exported="false" />
 
-
+        <activity
+            android:name=".AppointmentDetailsActivity"
+            android:exported="false"
+            android:label="Appointment Details" />
 
     </application>
 

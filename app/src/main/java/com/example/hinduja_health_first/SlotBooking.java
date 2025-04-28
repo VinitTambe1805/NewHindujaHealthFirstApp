@@ -35,9 +35,14 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
@@ -76,6 +81,12 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
     private final String[] afternoonSlots = {"2:00 PM", "2:30 PM", "3:00 PM", "3:30 PM"};
     private final String[] eveningSlots = {"4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM"};
 
+    private FirebaseAuth mAuth;
+    private FirebaseDatabaseHelper databaseHelper;
+    private String selectedDoctorName;
+    private String selectedSpecialty;
+    private String selectedTimeSlot;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -84,16 +95,20 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
         // Create notification channel
         createNotificationChannel();
 
+        // Initialize Firebase
+        mAuth = FirebaseAuth.getInstance();
+        databaseHelper = FirebaseDatabaseHelper.getInstance();
+
         // Get doctor's information from intent
-        String doctorName = getIntent().getStringExtra("DOCTOR_NAME");
-        String doctorSpecialty = getIntent().getStringExtra("DOCTOR_SPECIALTY");
+        selectedDoctorName = getIntent().getStringExtra("DOCTOR_NAME");
+        selectedSpecialty = getIntent().getStringExtra("DOCTOR_SPECIALTY");
         String doctorExperience = getIntent().getStringExtra("DOCTOR_EXPERIENCE");
 
         // Display doctor's information
         doctorInfoText = findViewById(R.id.doctorInfoText);
-        if (doctorInfoText != null && doctorName != null) {
-            String doctorInfo = "Doctor: " + doctorName + "\n" +
-                    "Specialty: " + doctorSpecialty + "\n" +
+        if (doctorInfoText != null && selectedDoctorName != null) {
+            String doctorInfo = "Doctor: " + selectedDoctorName + "\n" +
+                    "Specialty: " + selectedSpecialty + "\n" +
                     "Experience: " + doctorExperience;
             doctorInfoText.setText(doctorInfo);
         }
@@ -419,7 +434,7 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
         // Highlight selected button
         selectedSlot.setStrokeColor(ColorStateList.valueOf(selectedColor));
         selectedSlot.setTextColor(selectedColor);
-        selectedTimeSlot = selectedSlot;
+        selectedTimeSlot = selectedSlot.getText().toString();
     }
 
     private void saveAndContinue() {
@@ -436,7 +451,7 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
         // Get doctor information from intent
         String doctorName = getIntent().getStringExtra("DOCTOR_NAME");
         String doctorSpecialty = getIntent().getStringExtra("DOCTOR_SPECIALTY");
-        String selectedTime = selectedTimeSlot.getText().toString();
+        String selectedTime = selectedTimeSlot;
 
         // Create intent for AppointmentSummary activity
         Intent intent = new Intent(this, AppointmentSummary.class);
@@ -484,7 +499,7 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
         Intent intent = new Intent(this, AppointmentSummary.class);
         intent.putExtra("DOCTOR_NAME", doctorName);
         intent.putExtra("DOCTOR_SPECIALTY", specialty);
-        intent.putExtra("APPOINTMENT_TIME", selectedTimeSlot.getText().toString());
+        intent.putExtra("APPOINTMENT_TIME", selectedTimeSlot);
         intent.putExtra("LOCATION", "Hinduja Hospital, Mahim");
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 

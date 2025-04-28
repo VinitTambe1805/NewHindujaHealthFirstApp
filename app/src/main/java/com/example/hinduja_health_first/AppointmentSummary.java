@@ -64,10 +64,20 @@ public class AppointmentSummary extends AppCompatActivity {
         confirmButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // Get appointment details
+                String doctorName = getIntent().getStringExtra("DOCTOR_NAME");
+                String specialty = getIntent().getStringExtra("DOCTOR_SPECIALTY");
+                String appointmentTime = getIntent().getStringExtra("APPOINTMENT_TIME");
+                String location = getIntent().getStringExtra("LOCATION");
+
+                // Save appointment data
+                SharedPrefManager.getInstance(AppointmentSummary.this)
+                    .saveAppointment(doctorName, specialty, appointmentTime, location);
+
                 // Show confirmation message
                 Toast.makeText(AppointmentSummary.this, "Appointment confirmed successfully!", Toast.LENGTH_LONG).show();
                 
-                // Create intent for MainActivity
+                // Create intent for MainActivity without appointment details
                 Intent intent = new Intent(AppointmentSummary.this, MainActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(intent);
