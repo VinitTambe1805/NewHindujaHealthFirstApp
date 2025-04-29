@@ -33,6 +33,11 @@ android     {
 }
 
 dependencies {
+    // Add these Firebase dependencies
+    implementation platform('com.google.firebase:firebase-bom:32.7.1')
+    implementation 'com.google.firebase:firebase-analytics'
+    implementation 'com.google.firebase:firebase-database'
+    implementation 'com.google.firebase:firebase-auth'
     implementation 'com.google.android.material:material:1.11.0'
     implementation 'com.google.android.gms:play-services-maps:18.1.0'
     implementation 'com.google.android.gms:play-services-location:21.0.1'
@@ -58,4 +63,7 @@ dependencies {
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
 }
+
+// Add this at the bottom of the file
+apply plugin: 'com.google.gms.google-services'
 
