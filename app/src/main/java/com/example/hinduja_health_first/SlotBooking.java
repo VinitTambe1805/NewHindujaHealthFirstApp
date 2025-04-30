@@ -37,8 +37,17 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.maps.DirectionsApi;
+import com.google.maps.DirectionsApiRequest;
+import com.google.maps.GeoApiContext;
+import com.google.maps.model.DirectionsResult;
+import com.google.maps.model.TravelMode;
+import com.google.maps.model.DirectionsRoute;
+import com.google.maps.model.DirectionsLeg;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -47,6 +56,7 @@ import com.google.firebase.database.FirebaseDatabase;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -96,10 +106,22 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
     private String selectedTimeSlotString;
     private String selectedDate;
 
+    private TextView distanceText;
+    private TextView carTimeText;
+    private TextView busTimeText;
+    private TextView bikeTimeText;
+    private GeoApiContext geoApiContext;
+    private static final String GOOGLE_MAPS_API_KEY = "AIzaSyCdlclt1l5IGY9hkwmgcgkGc675EoOiQk4"; // Using the same API key as in AndroidManifest.xml
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_slot_booking);
+
+        // Initialize Google Maps API context
+        geoApiContext = new GeoApiContext.Builder()
+                .apiKey(GOOGLE_MAPS_API_KEY)
+                .build();
 
         // Create notification channel
         createNotificationChannel();
@@ -177,6 +199,23 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
         timeSlots[1] = findViewById(R.id.slot2);
         timeSlots[2] = findViewById(R.id.slot3);
         timeSlots[3] = findViewById(R.id.slot4);
+
+        distanceText = findViewById(R.id.distanceText);
+        carTimeText = findViewById(R.id.carTimeText);
+        busTimeText = findViewById(R.id.busTimeText);
+        bikeTimeText = findViewById(R.id.bikeTimeText);
+
+        // Initialize time slots with default values
+        for (MaterialButton slot : timeSlots) {
+            slot.setText("--:--");
+            slot.setEnabled(false);
+            slot.setVisibility(View.VISIBLE);
+            slot.setBackgroundTintList(ColorStateList.valueOf(
+                    ContextCompat.getColor(this, android.R.color.transparent)));
+            slot.setTextColor(ContextCompat.getColor(this, android.R.color.black));
+            slot.setStrokeColor(ColorStateList.valueOf(
+                    ContextCompat.getColor(this, android.R.color.black)));
+        }
     }
 
     private void setupClickListeners() {
@@ -199,6 +238,9 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
         submitButton.setEnabled(false);
         submitButton.setText("Searching...");
 
+        // Show default time slots while searching
+        updateTimeSlotsWithDefaultValues();
+
         executorService.execute(() -> {
             try {
                 List<Address> addresses = geocoder.getFromLocationName(pincode + ", India", 1);
@@ -208,28 +250,10 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
                     double lng = address.getLongitude();
                     LatLng location = new LatLng(lat, lng);
 
-                    // Get current time
-                    Calendar calendar = Calendar.getInstance();
-                    int currentHour = calendar.get(Calendar.HOUR_OF_DAY);
-                    isPeakHour = (currentHour >= PEAK_HOUR_MORNING_START && currentHour <= PEAK_HOUR_MORNING_END) ||
-                            (currentHour >= PEAK_HOUR_EVENING_START && currentHour <= PEAK_HOUR_EVENING_END);
-
-                    // Calculate travel time based on distance
-                    float[] results = new float[1];
-                    Location.distanceBetween(
-                            lat, lng,
-                            HOSPITAL_LOCATION.latitude, HOSPITAL_LOCATION.longitude,
-                            results
-                    );
-
-                    // Convert distance to estimated travel time (assuming average speed of 30 km/h)
-                    double distanceInKm = results[0] / 1000;
-                    estimatedTravelTime = (distanceInKm / 30.0) * 60; // Convert to minutes
-
                     runOnUiThread(() -> {
                         selectedLocation = location;
                         updateMapMarker();
-                        updateTimeSlots();
+                        calculateDistanceAndTimeWithTraffic(location, HOSPITAL_LOCATION);
                         submitButton.setEnabled(true);
                         submitButton.setText("SUBMIT");
                         Toast.makeText(this, "Location found", Toast.LENGTH_SHORT).show();
@@ -239,6 +263,7 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
                         Toast.makeText(this, "Location not found for this pincode", Toast.LENGTH_SHORT).show();
                         submitButton.setEnabled(true);
                         submitButton.setText("SUBMIT");
+                        updateTimeSlotsWithDefaultValues();
                     });
                 }
             } catch (IOException e) {
@@ -246,9 +271,283 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
                     Toast.makeText(this, "Error finding location: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     submitButton.setEnabled(true);
                     submitButton.setText("SUBMIT");
+                    updateTimeSlotsWithDefaultValues();
                 });
             }
         });
+    }
+
+    private void updateTimeSlotsWithDefaultValues() {
+        Calendar calendar = Calendar.getInstance();
+        int currentHour = calendar.get(Calendar.HOUR_OF_DAY);
+        int currentMinute = calendar.get(Calendar.MINUTE);
+
+        // Round up to nearest 15 minutes
+        currentMinute = ((currentMinute + 14) / 15) * 15;
+        if (currentMinute >= 60) {
+            currentHour++;
+            currentMinute = 0;
+        }
+
+        for (int i = 0; i < 4; i++) {
+            String time = String.format("%02d:%02d %s",
+                    currentHour > 12 ? currentHour - 12 : currentHour,
+                    currentMinute,
+                    currentHour >= 12 ? "PM" : "AM");
+
+            timeSlots[i].setText(time);
+            timeSlots[i].setEnabled(true);
+            timeSlots[i].setVisibility(View.VISIBLE);
+            timeSlots[i].setBackgroundTintList(ColorStateList.valueOf(
+                    ContextCompat.getColor(this, android.R.color.transparent)));
+            timeSlots[i].setTextColor(ContextCompat.getColor(this, android.R.color.black));
+            timeSlots[i].setStrokeColor(ColorStateList.valueOf(
+                    ContextCompat.getColor(this, android.R.color.black)));
+
+            // Add 15 minutes for next slot
+            currentMinute += 15;
+            if (currentMinute >= 60) {
+                currentHour++;
+                currentMinute = 0;
+            }
+        }
+
+        // Update the title
+        TextView slotsTitle = findViewById(R.id.slotsTitle);
+        slotsTitle.setText("Available Time Slots");
+        slotsTitle.setVisibility(View.VISIBLE);
+    }
+
+    private void calculateDistanceAndTimeWithTraffic(LatLng origin, LatLng destination) {
+        final Instant departureTime = Instant.now();
+        executorService.execute(() -> {
+            try {
+                // Calculate distance and time for car with real-time traffic
+                DirectionsApiRequest carRequest = DirectionsApi.newRequest(geoApiContext)
+                        .origin(new com.google.maps.model.LatLng(origin.latitude, origin.longitude))
+                        .destination(new com.google.maps.model.LatLng(destination.latitude, destination.longitude))
+                        .mode(TravelMode.DRIVING)
+                        .departureTime(departureTime)
+                        .trafficModel(com.google.maps.model.TrafficModel.BEST_GUESS);
+
+                DirectionsResult carResult = carRequest.await();
+                if (carResult.routes != null && carResult.routes.length > 0) {
+                    final DirectionsRoute carRoute = carResult.routes[0];
+                    final DirectionsLeg carLeg = carRoute.legs[0];
+                    final String carDistance = carLeg.distance.humanReadable;
+                    final String carDuration = carLeg.duration.humanReadable;
+                    final long durationInSeconds = carLeg.duration.inSeconds;
+                    final boolean hasTrafficInfo = carLeg.durationInTraffic != null;
+                    final long durationInTrafficSeconds = hasTrafficInfo ? carLeg.durationInTraffic.inSeconds : durationInSeconds;
+                    final String trafficInfo = hasTrafficInfo ? 
+                        " (Current traffic: " + formatTrafficDelay(durationInTrafficSeconds - durationInSeconds) + ")" : "";
+
+                    // Calculate time for bus
+                    DirectionsApiRequest busRequest = DirectionsApi.newRequest(geoApiContext)
+                            .origin(new com.google.maps.model.LatLng(origin.latitude, origin.longitude))
+                            .destination(new com.google.maps.model.LatLng(destination.latitude, destination.longitude))
+                            .mode(TravelMode.TRANSIT)
+                            .departureTime(departureTime);
+
+                    DirectionsResult busResult = busRequest.await();
+                    final String busDuration;
+                    if (busResult.routes != null && busResult.routes.length > 0) {
+                        DirectionsRoute busRoute = busResult.routes[0];
+                        DirectionsLeg busLeg = busRoute.legs[0];
+                        busDuration = busLeg.duration.humanReadable;
+                    } else {
+                        busDuration = "Not available";
+                    }
+
+                    // Calculate time for bike
+                    DirectionsApiRequest bikeRequest = DirectionsApi.newRequest(geoApiContext)
+                            .origin(new com.google.maps.model.LatLng(origin.latitude, origin.longitude))
+                            .destination(new com.google.maps.model.LatLng(destination.latitude, destination.longitude))
+                            .mode(TravelMode.BICYCLING)
+                            .departureTime(departureTime);
+
+                    DirectionsResult bikeResult = bikeRequest.await();
+                    final String bikeDuration;
+                    if (bikeResult.routes != null && bikeResult.routes.length > 0) {
+                        DirectionsRoute bikeRoute = bikeResult.routes[0];
+                        DirectionsLeg bikeLeg = bikeRoute.legs[0];
+                        bikeDuration = bikeLeg.duration.humanReadable;
+                    } else {
+                        bikeDuration = "Not available";
+                    }
+
+                    // Calculate suggested time slots based on real-time traffic
+                    final List<String> suggestedSlots = calculateSuggestedTimeSlotsWithTraffic(durationInTrafficSeconds);
+
+                    // Update UI with the results
+                    runOnUiThread(() -> {
+                        // Update distance and time information
+                        distanceText.setText("Distance: " + carDistance);
+                        carTimeText.setText("By Car: " + carDuration + trafficInfo);
+                        busTimeText.setText("By Bus: " + busDuration);
+                        bikeTimeText.setText("By Bike: " + bikeDuration);
+
+                        // Draw the route on the map
+                        List<LatLng> points = new ArrayList<>();
+                        for (com.google.maps.model.LatLng point : carRoute.overviewPolyline.decodePath()) {
+                            points.add(new LatLng(point.lat, point.lng));
+                        }
+
+                        mMap.addPolyline(new PolylineOptions()
+                                .addAll(points)
+                                .width(10)
+                                .color(ContextCompat.getColor(this, R.color.route_color)));
+
+                        // Zoom to show the entire route
+                        LatLngBounds.Builder boundsBuilder = new LatLngBounds.Builder();
+                        boundsBuilder.include(origin);
+                        boundsBuilder.include(destination);
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 100));
+
+                        // Update time slots based on real-time traffic
+                        updateTimeSlotsWithSuggestions(suggestedSlots);
+                    });
+                } else {
+                    runOnUiThread(() -> {
+                        Toast.makeText(this, "No route found", Toast.LENGTH_SHORT).show();
+                        distanceText.setText("Distance: --");
+                        carTimeText.setText("By Car: --");
+                        busTimeText.setText("By Bus: --");
+                        bikeTimeText.setText("By Bike: --");
+                        updateTimeSlotsWithDefaultValues();
+                    });
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error calculating distance and time: " + e.getMessage());
+                runOnUiThread(() -> {
+                    if (e.getMessage() != null && e.getMessage().contains("not authorized")) {
+                        Toast.makeText(this, 
+                            "Please enable Directions API, Distance Matrix API, and Geocoding API in Google Cloud Console", 
+                            Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(this, 
+                            "Error calculating route: " + e.getMessage(), 
+                            Toast.LENGTH_SHORT).show();
+                    }
+                    distanceText.setText("Distance: --");
+                    carTimeText.setText("By Car: --");
+                    busTimeText.setText("By Bus: --");
+                    bikeTimeText.setText("By Bike: --");
+                    
+                    mMap.clear();
+                    mMap.addMarker(new MarkerOptions().position(origin).title("Your Location"));
+                    mMap.addMarker(new MarkerOptions().position(destination).title("Hospital"));
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(
+                        new LatLngBounds.Builder()
+                            .include(origin)
+                            .include(destination)
+                            .build(), 100));
+                    
+                    updateTimeSlotsWithDefaultValues();
+                });
+            }
+        });
+    }
+
+    private String formatTrafficDelay(long delaySeconds) {
+        if (delaySeconds <= 0) return "No delay";
+        long minutes = delaySeconds / 60;
+        if (minutes < 1) return "Less than 1 minute";
+        return minutes + " minutes";
+    }
+
+    private List<String> calculateSuggestedTimeSlotsWithTraffic(long travelTimeSeconds) {
+        List<String> suggestedSlots = new ArrayList<>();
+        Calendar calendar = Calendar.getInstance();
+        int currentHour = calendar.get(Calendar.HOUR_OF_DAY);
+        int currentMinute = calendar.get(Calendar.MINUTE);
+        
+        // Convert travel time to minutes and add buffer time
+        int totalMinutes = (int) (travelTimeSeconds / 60) + 30; // Add 30 minutes buffer
+        
+        // Calculate the earliest possible arrival time
+        calendar.add(Calendar.MINUTE, totalMinutes);
+        int arrivalHour = calendar.get(Calendar.HOUR_OF_DAY);
+        int arrivalMinute = calendar.get(Calendar.MINUTE);
+        
+        // Round up to nearest 15 minutes
+        arrivalMinute = ((arrivalMinute + 14) / 15) * 15;
+        if (arrivalMinute >= 60) {
+            arrivalHour++;
+            arrivalMinute = 0;
+        }
+        
+        // Generate 4 suggested slots starting from the earliest possible arrival time
+        for (int i = 0; i < 4; i++) {
+            String time = String.format("%02d:%02d %s", 
+                arrivalHour > 12 ? arrivalHour - 12 : arrivalHour,
+                arrivalMinute,
+                arrivalHour >= 12 ? "PM" : "AM");
+            suggestedSlots.add(time);
+            
+            // Add 15 minutes for next slot
+            arrivalMinute += 15;
+            if (arrivalMinute >= 60) {
+                arrivalHour++;
+                arrivalMinute = 0;
+            }
+        }
+        
+        return suggestedSlots;
+    }
+
+    private void updateTimeSlotsWithSuggestions(List<String> suggestedSlots) {
+        if (suggestedSlots.size() >= 4) {
+            for (int i = 0; i < 4; i++) {
+                timeSlots[i].setText(suggestedSlots.get(i));
+                timeSlots[i].setEnabled(true);
+                timeSlots[i].setVisibility(View.VISIBLE);
+                timeSlots[i].setBackgroundTintList(ColorStateList.valueOf(
+                        ContextCompat.getColor(this, android.R.color.transparent)));
+                timeSlots[i].setTextColor(ContextCompat.getColor(this, android.R.color.black));
+                timeSlots[i].setStrokeColor(ColorStateList.valueOf(
+                        ContextCompat.getColor(this, android.R.color.black)));
+            }
+
+            // Update the title to show these are suggested slots
+            TextView slotsTitle = findViewById(R.id.slotsTitle);
+            slotsTitle.setText("Suggested Time Slots (Based on Travel Time)");
+            slotsTitle.setVisibility(View.VISIBLE);
+        } else {
+            // If no suggestions available, show default slots
+            Calendar calendar = Calendar.getInstance();
+            int currentHour = calendar.get(Calendar.HOUR_OF_DAY);
+            int currentMinute = calendar.get(Calendar.MINUTE);
+
+            // Round up to nearest 15 minutes
+            currentMinute = ((currentMinute + 14) / 15) * 15;
+            if (currentMinute >= 60) {
+                currentHour++;
+                currentMinute = 0;
+            }
+
+            for (int i = 0; i < 4; i++) {
+                String time = String.format("%02d:%02d %s",
+                        currentHour > 12 ? currentHour - 12 : currentHour,
+                        currentMinute,
+                        currentHour >= 12 ? "PM" : "AM");
+                timeSlots[i].setText(time);
+                timeSlots[i].setEnabled(true);
+                timeSlots[i].setVisibility(View.VISIBLE);
+                timeSlots[i].setBackgroundTintList(ColorStateList.valueOf(
+                        ContextCompat.getColor(this, android.R.color.transparent)));
+                timeSlots[i].setTextColor(ContextCompat.getColor(this, android.R.color.black));
+                timeSlots[i].setStrokeColor(ColorStateList.valueOf(
+                        ContextCompat.getColor(this, android.R.color.black)));
+
+                // Add 15 minutes for next slot
+                currentMinute += 15;
+                if (currentMinute >= 60) {
+                    currentHour++;
+                    currentMinute = 0;
+                }
+            }
+        }
     }
 
     private void updateTimeSlots() {
@@ -510,33 +809,33 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
             progressDialog.show();
 
             databaseHelper.checkTimeSlotAvailability(selectedDoctorName, selectedDate, selectedTimeSlotString,
-                new FirebaseDatabaseHelper.OnTimeSlotCheckListener() {
-                    @Override
-                    public void onTimeSlotChecked(boolean isAvailable) {
-                        try {
-                            if (progressDialog != null && progressDialog.isShowing()) {
-                                progressDialog.dismiss();
+                    new FirebaseDatabaseHelper.OnTimeSlotCheckListener() {
+                        @Override
+                        public void onTimeSlotChecked(boolean isAvailable) {
+                            try {
+                                if (progressDialog != null && progressDialog.isShowing()) {
+                                    progressDialog.dismiss();
+                                }
+
+                                if (isAvailable) {
+                                    // Slot is available, proceed with booking
+                                    bookAppointment();
+                                } else {
+                                    Toast.makeText(SlotBooking.this,
+                                            "This time slot is no longer available. Please select another slot.",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error in onTimeSlotChecked: " + e.getMessage());
+                                if (progressDialog != null && progressDialog.isShowing()) {
+                                    progressDialog.dismiss();
+                                }
+                                Toast.makeText(SlotBooking.this,
+                                        "Please try selecting another slot",
+                                        Toast.LENGTH_SHORT).show();
                             }
-                            
-                            if (isAvailable) {
-                                // Slot is available, proceed with booking
-                                bookAppointment();
-                            } else {
-                                Toast.makeText(SlotBooking.this, 
-                                    "This time slot is no longer available. Please select another slot.", 
-                                    Toast.LENGTH_SHORT).show();
-                            }
-                        } catch (Exception e) {
-                            Log.e(TAG, "Error in onTimeSlotChecked: " + e.getMessage());
-                            if (progressDialog != null && progressDialog.isShowing()) {
-                                progressDialog.dismiss();
-                            }
-                            Toast.makeText(SlotBooking.this, 
-                                "Please try selecting another slot", 
-                                Toast.LENGTH_SHORT).show();
                         }
-                    }
-                });
+                    });
         } catch (Exception e) {
             Log.e(TAG, "Error in checkTimeSlotAvailability: " + e.getMessage());
             Toast.makeText(this, "Please try again", Toast.LENGTH_SHORT).show();
@@ -558,14 +857,14 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
         try {
             // Create patient object
             Patient patient = new Patient(
-                null, // ID will be set by Firebase
-                currentUser.getDisplayName(),
-                currentUser.getEmail(),
-                currentUser.getPhoneNumber(),
-                selectedDoctorName,
-                selectedSpecialty,
-                selectedDate,
-                selectedTimeSlotString
+                    null, // ID will be set by Firebase
+                    currentUser.getDisplayName(),
+                    currentUser.getEmail(),
+                    currentUser.getPhoneNumber(),
+                    selectedDoctorName,
+                    selectedSpecialty,
+                    selectedDate,
+                    selectedTimeSlotString
             );
 
             // Save appointment to Firebase
@@ -574,9 +873,9 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
                 public void onSuccess() {
                     progressDialog.dismiss();
                     // Show success message
-                    Toast.makeText(SlotBooking.this, 
-                        "Appointment booked successfully!", 
-                        Toast.LENGTH_SHORT).show();
+                    Toast.makeText(SlotBooking.this,
+                            "Appointment booked successfully!",
+                            Toast.LENGTH_SHORT).show();
 
                     // Show notification
                     showAppointmentNotification(selectedDoctorName, selectedSpecialty);
@@ -595,9 +894,9 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
                 @Override
                 public void onFailure(Exception e) {
                     progressDialog.dismiss();
-                    Toast.makeText(SlotBooking.this, 
-                        "Failed to book appointment: " + e.getMessage(), 
-                        Toast.LENGTH_SHORT).show();
+                    Toast.makeText(SlotBooking.this,
+                            "Failed to book appointment: " + e.getMessage(),
+                            Toast.LENGTH_SHORT).show();
                 }
             });
         } catch (Exception e) {

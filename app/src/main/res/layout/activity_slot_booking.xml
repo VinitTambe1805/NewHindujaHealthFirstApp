@@ -37,7 +37,7 @@
 
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
-            android:layout_height="400dp"
+            android:layout_height="300dp"
             android:layout_marginBottom="16dp"
             app:cardCornerRadius="8dp"
             app:cardElevation="4dp">
@@ -67,7 +67,57 @@
                     android:text="Move the pin"
                     android:textColor="@android:color/black" />
             </FrameLayout>
+        </androidx.cardview.widget.CardView>
 
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/distanceText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:text="Distance: --"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/carTimeText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:text="By Car: --"
+                    android:textColor="@color/black"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/busTimeText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:text="By Bus: --"
+                    android:textColor="@color/black"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/bikeTimeText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="By Bike: --"
+                    android:textColor="@color/black"
+                    android:textSize="14sp" />
+            </LinearLayout>
         </androidx.cardview.widget.CardView>
 
         <TextView
@@ -118,7 +168,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
-            android:text="BEST SUITABLE SLOTS AS PER YOUR LOCATIONS"
+            android:text="SUGGESTED TIME SLOTS BASED ON TRAVEL TIME"
             android:textColor="@color/black"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -146,7 +196,7 @@
                 android:layout_height="wrap_content"
                 android:layout_columnWeight="1"
                 android:layout_margin="4dp"
-                android:text="4:30PM"
+                android:text="--:--"
                 android:textColor="@color/black" />
 
             <com.google.android.material.button.MaterialButton
@@ -156,7 +206,7 @@
                 android:layout_height="wrap_content"
                 android:layout_columnWeight="1"
                 android:layout_margin="4dp"
-                android:text="4:45PM"
+                android:text="--:--"
                 android:textColor="@color/black" />
 
             <com.google.android.material.button.MaterialButton
@@ -166,7 +216,7 @@
                 android:layout_height="wrap_content"
                 android:layout_columnWeight="1"
                 android:layout_margin="4dp"
-                android:text="4:55PM"
+                android:text="--:--"
                 android:textColor="@color/black" />
 
             <com.google.android.material.button.MaterialButton
@@ -176,7 +226,7 @@
                 android:layout_height="wrap_content"
                 android:layout_columnWeight="1"
                 android:layout_margin="4dp"
-                android:text="5:10PM"
+                android:text="--:--"
                 android:textColor="@color/black" />
         </GridLayout>
 

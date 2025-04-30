@@ -47,7 +47,7 @@ public class AppointmentSummary extends AppCompatActivity {
         if (doctorName != null && specialty != null) {
             doctorNameText.setText(doctorName);
             doctorSpecialtyText.setText(specialty);
-            appointmentTimeText.setText(appointmentTime != null ? appointmentTime : "Today at 10:00 AM");
+            appointmentTimeText.setText(appointmentTime != null ? appointmentTime : "10:00 AM");
             timeRemainingText.setText(location != null ? location : "Hinduja Hospital, Mahim");
         } else {
             Toast.makeText(this, "No appointment details found", Toast.LENGTH_SHORT).show();
@@ -55,7 +55,7 @@ public class AppointmentSummary extends AppCompatActivity {
         }
 
         // Calculate appointment time in milliseconds
-        appointmentTimeMillis = calculateAppointmentTimeMillis("10:00 AM");
+        appointmentTimeMillis = calculateAppointmentTimeMillis(appointmentTime);
 
         // Start countdown timer
         startCountdownTimer();
@@ -87,34 +87,64 @@ public class AppointmentSummary extends AppCompatActivity {
     }
 
     private long calculateAppointmentTimeMillis(String timeSlot) {
+        if (timeSlot == null || timeSlot.isEmpty()) {
+            timeSlot = "10:00 AM"; // Default time if none provided
+        }
+
         Calendar calendar = Calendar.getInstance();
-        String[] timeParts = timeSlot.split(":");
-        int hour = Integer.parseInt(timeParts[0]);
-        int minute = Integer.parseInt(timeParts[1].split(" ")[0]);
-        String amPm = timeParts[1].split(" ")[1];
+        
+        try {
+            // Parse the time slot (format: "HH:MM AM/PM")
+            String[] parts = timeSlot.split(" ");
+            String[] timeParts = parts[0].split(":");
+            
+            int hour = Integer.parseInt(timeParts[0]);
+            int minute = Integer.parseInt(timeParts[1]);
+            String amPm = parts[1];
 
-        // Convert to 24-hour format
-        if (amPm.equals("PM") && hour != 12) {
-            hour += 12;
-        } else if (amPm.equals("AM") && hour == 12) {
-            hour = 0;
+            // Convert to 24-hour format
+            if (amPm.equals("PM") && hour != 12) {
+                hour += 12;
+            } else if (amPm.equals("AM") && hour == 12) {
+                hour = 0;
+            }
+
+            // Set the appointment time
+            calendar.set(Calendar.HOUR_OF_DAY, hour);
+            calendar.set(Calendar.MINUTE, minute);
+            calendar.set(Calendar.SECOND, 0);
+            calendar.set(Calendar.MILLISECOND, 0);
+
+            // If the appointment time has passed for today, set it for tomorrow
+            if (calendar.getTimeInMillis() <= System.currentTimeMillis()) {
+                calendar.add(Calendar.DAY_OF_MONTH, 1);
+            }
+
+            return calendar.getTimeInMillis();
+        } catch (Exception e) {
+            // If there's any error in parsing, set default time (10:00 AM)
+            calendar.set(Calendar.HOUR_OF_DAY, 10);
+            calendar.set(Calendar.MINUTE, 0);
+            calendar.set(Calendar.SECOND, 0);
+            calendar.set(Calendar.MILLISECOND, 0);
+            
+            if (calendar.getTimeInMillis() <= System.currentTimeMillis()) {
+                calendar.add(Calendar.DAY_OF_MONTH, 1);
+            }
+            
+            return calendar.getTimeInMillis();
         }
-
-        calendar.set(Calendar.HOUR_OF_DAY, hour);
-        calendar.set(Calendar.MINUTE, minute);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
-
-        // If the appointment time has passed for today, set it for tomorrow
-        if (calendar.getTimeInMillis() < System.currentTimeMillis()) {
-            calendar.add(Calendar.DAY_OF_MONTH, 1);
-        }
-
-        return calendar.getTimeInMillis();
     }
 
     private void startCountdownTimer() {
-        countDownTimer = new CountDownTimer(appointmentTimeMillis - System.currentTimeMillis(), 1000) {
+        long timeUntilAppointment = appointmentTimeMillis - System.currentTimeMillis();
+        
+        if (timeUntilAppointment <= 0) {
+            timeRemainingText.setText("Appointment time has arrived!");
+            return;
+        }
+
+        countDownTimer = new CountDownTimer(timeUntilAppointment, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
                 long seconds = millisUntilFinished / 1000;
@@ -122,9 +152,20 @@ public class AppointmentSummary extends AppCompatActivity {
                 long hours = minutes / 60;
                 long days = hours / 24;
 
-                String timeRemaining = String.format(Locale.getDefault(),
-                        "Time remaining: %d days, %d hours, %d minutes",
-                        days, hours % 24, minutes % 60);
+                String timeRemaining;
+                if (days > 0) {
+                    timeRemaining = String.format(Locale.getDefault(),
+                            "Time remaining: %d days, %d hours, %d minutes",
+                            days, hours % 24, minutes % 60);
+                } else if (hours > 0) {
+                    timeRemaining = String.format(Locale.getDefault(),
+                            "Time remaining: %d hours, %d minutes",
+                            hours, minutes % 60);
+                } else {
+                    timeRemaining = String.format(Locale.getDefault(),
+                            "Time remaining: %d minutes",
+                            minutes);
+                }
                 timeRemainingText.setText(timeRemaining);
             }
 
