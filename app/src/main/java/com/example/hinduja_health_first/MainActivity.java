@@ -160,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         bookTest.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, Doctor_Info.class);
+            Intent intent = new Intent(MainActivity.this, BookTestServicesActivity.class);
             startActivity(intent);
         });
 
@@ -219,7 +219,7 @@ public class MainActivity extends AppCompatActivity {
         if (query.contains("doctor") || query.contains("appointment")) {
             startActivity(new Intent(this, RecycleActivity.class));
         } else if (query.contains("test") || query.contains("service")) {
-            startActivity(new Intent(this, Doctor_Info.class));
+            startActivity(new Intent(this, BookTestServicesActivity.class));
         } else if (query.contains("checkup") || query.contains("health")) {
             startActivity(new Intent(this, SlotBooking.class));
         }
