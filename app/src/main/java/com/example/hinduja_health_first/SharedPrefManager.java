@@ -8,7 +8,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class SharedPrefManager {
     private static final String PREF_NAME = "HindujaAppPrefs";
@@ -143,5 +145,47 @@ public class SharedPrefManager {
         public long getTimestamp() {
             return timestamp;
         }
+    }
+
+    public static class TestMemo {
+        private String department;
+        private List<String> tests;
+
+        public TestMemo(String department, List<String> tests) {
+            this.department = department;
+            this.tests = tests;
+        }
+
+        public String getDepartment() {
+            return department;
+        }
+
+        public List<String> getTests() {
+            return tests;
+        }
+    }
+
+    public void saveTestMemo(String department, List<String> tests) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("test_memo_department", department);
+        editor.putStringSet("test_memo_tests", new HashSet<>(tests));
+        editor.apply();
+    }
+
+    public TestMemo getTestMemo() {
+        String department = sharedPreferences.getString("test_memo_department", null);
+        Set<String> testsSet = sharedPreferences.getStringSet("test_memo_tests", null);
+        
+        if (department != null && testsSet != null) {
+            return new TestMemo(department, new ArrayList<>(testsSet));
+        }
+        return null;
+    }
+
+    public void clearTestMemo() {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.remove("test_memo_department");
+        editor.remove("test_memo_tests");
+        editor.apply();
     }
 } 

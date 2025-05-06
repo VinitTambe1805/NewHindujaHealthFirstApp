@@ -70,7 +70,7 @@ public class AppointmentSummary extends AppCompatActivity {
                 String appointmentTime = getIntent().getStringExtra("APPOINTMENT_TIME");
                 String location = getIntent().getStringExtra("LOCATION");
 
-                // Save appointment data
+                // Save appointment data with current timestamp
                 SharedPrefManager.getInstance(AppointmentSummary.this)
                     .saveAppointment(doctorName, specialty, appointmentTime, location);
 

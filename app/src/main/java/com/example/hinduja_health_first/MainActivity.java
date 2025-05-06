@@ -93,14 +93,16 @@ public class MainActivity extends AppCompatActivity {
                         return;
                     }
 
-                    // Check if there are any appointments
+                    // Check if there are any appointments or test memos
                     List<SharedPrefManager.Appointment> appointments = sharedPrefManager.getAllAppointments();
-                    if (!appointments.isEmpty()) {
+                    SharedPrefManager.TestMemo testMemo = sharedPrefManager.getTestMemo();
+                    
+                    if (!appointments.isEmpty() || testMemo != null) {
                         // Start AppointmentDetailsActivity
                         Intent intent = new Intent(MainActivity.this, AppointmentDetailsActivity.class);
                         startActivity(intent);
                     } else {
-                        Toast.makeText(MainActivity.this, "No appointments found", 
+                        Toast.makeText(MainActivity.this, "No appointments or test memos found", 
                             Toast.LENGTH_SHORT).show();
                     }
                 } catch (Exception e) {
