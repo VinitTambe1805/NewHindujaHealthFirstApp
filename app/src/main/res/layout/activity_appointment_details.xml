@@ -14,18 +14,42 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
+            android:layout_marginBottom="16dp"
             android:text="Appointments &amp; Tests"
-            android:textAlignment="center"
             android:textColor="@color/black"
             android:textSize="24sp"
             android:textStyle="bold" />
+
+        <!-- Appointments Section -->
+        <TextView
+            android:id="@+id/appointmentsHeader"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="Appointments"
+            android:textColor="@color/black"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
 
         <LinearLayout
             android:id="@+id/appointmentsContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
+            android:visibility="gone" />
+
+        <!-- Test Memos Section -->
+        <TextView
+            android:id="@+id/testMemosHeader"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp"
+            android:text="Test Memos"
+            android:textColor="@color/black"
+            android:textSize="20sp"
+            android:textStyle="bold"
             android:visibility="gone" />
 
         <LinearLayout
@@ -39,11 +63,10 @@
             android:id="@+id/backButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
             android:layout_marginTop="16dp"
-            android:backgroundTint="@color/teal_700"
-            android:text="Back"
-            android:textSize="16sp"
-            app:cornerRadius="8dp" />
+            android:backgroundTint="@color/lightblue"
+            android:text="Back" />
 
     </LinearLayout>
 </ScrollView> 

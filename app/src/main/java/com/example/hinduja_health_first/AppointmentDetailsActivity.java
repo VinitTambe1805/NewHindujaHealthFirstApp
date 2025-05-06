@@ -20,6 +20,8 @@ import java.util.List;
 public class AppointmentDetailsActivity extends AppCompatActivity {
     private LinearLayout appointmentsContainer;
     private LinearLayout testMemosContainer;
+    private TextView appointmentsHeader;
+    private TextView testMemosHeader;
     private MaterialButton backButton;
     private SharedPrefManager sharedPrefManager;
 
@@ -34,6 +36,8 @@ public class AppointmentDetailsActivity extends AppCompatActivity {
         // Initialize views
         appointmentsContainer = findViewById(R.id.appointmentsContainer);
         testMemosContainer = findViewById(R.id.testMemosContainer);
+        appointmentsHeader = findViewById(R.id.appointmentsHeader);
+        testMemosHeader = findViewById(R.id.testMemosHeader);
         backButton = findViewById(R.id.backButton);
 
         // Load and display appointments
@@ -60,6 +64,7 @@ public class AppointmentDetailsActivity extends AppCompatActivity {
         
         if (appointments.isEmpty()) {
             appointmentsContainer.setVisibility(View.GONE);
+            appointmentsHeader.setVisibility(View.GONE);
             return;
         }
 
@@ -72,6 +77,7 @@ public class AppointmentDetailsActivity extends AppCompatActivity {
         });
 
         appointmentsContainer.setVisibility(View.VISIBLE);
+        appointmentsHeader.setVisibility(View.VISIBLE);
         appointmentsContainer.removeAllViews();
 
         for (SharedPrefManager.Appointment appointment : appointments) {
@@ -85,10 +91,12 @@ public class AppointmentDetailsActivity extends AppCompatActivity {
 
         if (testMemo == null) {
             testMemosContainer.setVisibility(View.GONE);
+            testMemosHeader.setVisibility(View.GONE);
             return;
         }
 
         testMemosContainer.setVisibility(View.VISIBLE);
+        testMemosHeader.setVisibility(View.VISIBLE);
         testMemosContainer.removeAllViews();
 
         CardView testMemoCard = createTestMemoCard(testMemo);
