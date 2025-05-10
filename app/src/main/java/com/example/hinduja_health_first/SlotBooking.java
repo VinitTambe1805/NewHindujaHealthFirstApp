@@ -339,8 +339,8 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
                     final long durationInSeconds = carLeg.duration.inSeconds;
                     final boolean hasTrafficInfo = carLeg.durationInTraffic != null;
                     final long durationInTrafficSeconds = hasTrafficInfo ? carLeg.durationInTraffic.inSeconds : durationInSeconds;
-                    final String trafficInfo = hasTrafficInfo ? 
-                        " (Current traffic: " + formatTrafficDelay(durationInTrafficSeconds - durationInSeconds) + ")" : "";
+                    final String trafficInfo = hasTrafficInfo ?
+                            " (Current traffic: " + formatTrafficDelay(durationInTrafficSeconds - durationInSeconds) + ")" : "";
 
                     // Calculate time for bus
                     DirectionsApiRequest busRequest = DirectionsApi.newRequest(geoApiContext)
@@ -421,28 +421,28 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
                 Log.e(TAG, "Error calculating distance and time: " + e.getMessage());
                 runOnUiThread(() -> {
                     if (e.getMessage() != null && e.getMessage().contains("not authorized")) {
-                        Toast.makeText(this, 
-                            "Please enable Directions API, Distance Matrix API, and Geocoding API in Google Cloud Console", 
-                            Toast.LENGTH_LONG).show();
+                        Toast.makeText(this,
+                                "Please enable Directions API, Distance Matrix API, and Geocoding API in Google Cloud Console",
+                                Toast.LENGTH_LONG).show();
                     } else {
-                        Toast.makeText(this, 
-                            "Error calculating route: " + e.getMessage(), 
-                            Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this,
+                                "Error calculating route: " + e.getMessage(),
+                                Toast.LENGTH_SHORT).show();
                     }
                     distanceText.setText("Distance: --");
                     carTimeText.setText("By Car: --");
                     busTimeText.setText("By Bus: --");
                     bikeTimeText.setText("By Bike: --");
-                    
+
                     mMap.clear();
                     mMap.addMarker(new MarkerOptions().position(origin).title("Your Location"));
                     mMap.addMarker(new MarkerOptions().position(destination).title("Hospital"));
                     mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(
-                        new LatLngBounds.Builder()
-                            .include(origin)
-                            .include(destination)
-                            .build(), 100));
-                    
+                            new LatLngBounds.Builder()
+                                    .include(origin)
+                                    .include(destination)
+                                    .build(), 100));
+
                     updateTimeSlotsWithDefaultValues();
                 });
             }
@@ -461,30 +461,30 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
         Calendar calendar = Calendar.getInstance();
         int currentHour = calendar.get(Calendar.HOUR_OF_DAY);
         int currentMinute = calendar.get(Calendar.MINUTE);
-        
+
         // Convert travel time to minutes and add buffer time
         int totalMinutes = (int) (travelTimeSeconds / 60) + 30; // Add 30 minutes buffer
-        
+
         // Calculate the earliest possible arrival time
         calendar.add(Calendar.MINUTE, totalMinutes);
         int arrivalHour = calendar.get(Calendar.HOUR_OF_DAY);
         int arrivalMinute = calendar.get(Calendar.MINUTE);
-        
+
         // Round up to nearest 15 minutes
         arrivalMinute = ((arrivalMinute + 14) / 15) * 15;
         if (arrivalMinute >= 60) {
             arrivalHour++;
             arrivalMinute = 0;
         }
-        
+
         // Generate 4 suggested slots starting from the earliest possible arrival time
         for (int i = 0; i < 4; i++) {
-            String time = String.format("%02d:%02d %s", 
-                arrivalHour > 12 ? arrivalHour - 12 : arrivalHour,
-                arrivalMinute,
-                arrivalHour >= 12 ? "PM" : "AM");
+            String time = String.format("%02d:%02d %s",
+                    arrivalHour > 12 ? arrivalHour - 12 : arrivalHour,
+                    arrivalMinute,
+                    arrivalHour >= 12 ? "PM" : "AM");
             suggestedSlots.add(time);
-            
+
             // Add 15 minutes for next slot
             arrivalMinute += 15;
             if (arrivalMinute >= 60) {
@@ -492,7 +492,7 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
                 arrivalMinute = 0;
             }
         }
-        
+
         return suggestedSlots;
     }
 

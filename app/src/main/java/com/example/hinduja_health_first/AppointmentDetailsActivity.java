@@ -177,14 +177,14 @@ public class AppointmentDetailsActivity extends AppCompatActivity {
         TextView testsTitle = new TextView(this);
         testsTitle.setText("Selected Tests:");
         testsTitle.setTextSize(16);
-        testsTitle.setTextColor(getResources().getColor(android.R.color.darker_gray));
+        testsTitle.setTextColor(getResources().getColor(android.R.color.black));
         content.addView(testsTitle);
 
         for (String test : testMemo.getTests()) {
             TextView testItem = new TextView(this);
             testItem.setText("• " + test);
             testItem.setTextSize(16);
-            testItem.setTextColor(getResources().getColor(android.R.color.darker_gray));
+            testItem.setTextColor(getResources().getColor(android.R.color.black));
             content.addView(testItem);
         }
 
