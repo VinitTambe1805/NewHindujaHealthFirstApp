@@ -26,7 +26,6 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
-import androidx.core.app.PendingIntentCompat;
 
 import com.example.hinduja_health_first.ui.login.LoginActivity;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -952,49 +951,30 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
     }
 
     private void showAppointmentNotification(String doctorName, String specialty) {
-        // Check for notification permission
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
-                    != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{android.Manifest.permission.POST_NOTIFICATIONS},
-                        PERMISSION_REQUEST_CODE);
-                return;
-            }
-        }
-
-        // Create intent for notification click
-        Intent intent = new Intent(this, AppointmentSummary.class);
-        intent.putExtra("DOCTOR_NAME", doctorName);
-        intent.putExtra("DOCTOR_SPECIALTY", specialty);
-        intent.putExtra("APPOINTMENT_TIME", selectedTimeSlotString);
-        intent.putExtra("LOCATION", "Hinduja Hospital, Mahim");
+        Intent intent = new Intent(this, SlotBooking.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 
-        // Create PendingIntent with proper flags
-        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        PendingIntent pendingIntent;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            flags |= PendingIntent.FLAG_IMMUTABLE;
+            pendingIntent = PendingIntent.getActivity(this, 0, intent,
+                    PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+        } else {
+            pendingIntent = PendingIntent.getActivity(this, 0, intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT);
         }
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, flags);
 
-        // Build notification
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_notification)
-                .setContentTitle("Appointment Confirmed")
-                .setContentText("Your appointment with " + doctorName + " (" + specialty + ") has been confirmed")
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setContentTitle("Appointment Booked")
+                .setContentText("Your appointment with Dr. " + doctorName + " (" + specialty + ") has been confirmed")
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setAutoCancel(true)
-                .setVibrate(new long[]{100, 200, 300, 400, 500})
                 .setContentIntent(pendingIntent);
 
-        // Show notification
-        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
-        try {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                == PackageManager.PERMISSION_GRANTED) {
+            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
             notificationManager.notify(NOTIFICATION_ID, builder.build());
-            Toast.makeText(this, "Notification sent successfully", Toast.LENGTH_SHORT).show();
-        } catch (SecurityException e) {
-            Toast.makeText(this, "Failed to show notification: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 

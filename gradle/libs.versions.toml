@@ -16,6 +16,7 @@ lifecycleViewmodelKtx = "2.8.7"
 firebaseAuth = "23.2.0"
 playServicesMaps = "19.2.0"
 playServicesLocation = "21.3.0"
+firebaseAppdistributionGradle = "5.1.1"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -33,6 +34,7 @@ lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifecycle-view
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuth" }
 play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
+firebase-appdistribution-gradle = { group = "com.google.firebase", name = "firebase-appdistribution-gradle", version.ref = "firebaseAppdistributionGradle" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
