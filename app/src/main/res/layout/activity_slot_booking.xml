@@ -87,7 +87,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
-                    android:text="Distance: --"
+                    android:text="Time Taken By: --"
                     android:textColor="@color/black"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -97,7 +97,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="4dp"
-                    android:text="By Car: --"
+                    android:text="Car: --"
                     android:textColor="@color/black"
                     android:textSize="14sp" />
 
@@ -106,7 +106,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="4dp"
-                    android:text="By Bus: --"
+                    android:text="Bus: --"
                     android:textColor="@color/black"
                     android:textSize="14sp" />
 
@@ -114,7 +114,7 @@
                     android:id="@+id/bikeTimeText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="By Bike: --"
+                    android:text="Bike: --"
                     android:textColor="@color/black"
                     android:textSize="14sp" />
             </LinearLayout>
