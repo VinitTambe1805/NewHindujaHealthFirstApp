@@ -87,9 +87,9 @@ public class AppointmentDetailsActivity extends AppCompatActivity {
     }
 
     private void loadTestMemos() {
-        SharedPrefManager.TestMemo testMemo = sharedPrefManager.getTestMemo();
+        List<SharedPrefManager.TestMemo> testMemos = sharedPrefManager.getAllTestMemos();
 
-        if (testMemo == null) {
+        if (testMemos.isEmpty()) {
             testMemosContainer.setVisibility(View.GONE);
             testMemosHeader.setVisibility(View.GONE);
             return;
@@ -99,8 +99,18 @@ public class AppointmentDetailsActivity extends AppCompatActivity {
         testMemosHeader.setVisibility(View.VISIBLE);
         testMemosContainer.removeAllViews();
 
-        CardView testMemoCard = createTestMemoCard(testMemo);
-        testMemosContainer.addView(testMemoCard);
+        // Sort test memos by timestamp (most recent first)
+        Collections.sort(testMemos, new Comparator<SharedPrefManager.TestMemo>() {
+            @Override
+            public int compare(SharedPrefManager.TestMemo m1, SharedPrefManager.TestMemo m2) {
+                return Long.compare(m2.getTimestamp(), m1.getTimestamp());
+            }
+        });
+
+        for (SharedPrefManager.TestMemo testMemo : testMemos) {
+            CardView testMemoCard = createTestMemoCard(testMemo);
+            testMemosContainer.addView(testMemoCard);
+        }
     }
 
     private CardView createAppointmentCard(SharedPrefManager.Appointment appointment) {
@@ -161,16 +171,16 @@ public class AppointmentDetailsActivity extends AppCompatActivity {
         content.setOrientation(LinearLayout.VERTICAL);
         content.setPadding(16, 16, 16, 16);
 
-        TextView title = new TextView(this);
-        title.setText("Tests Memo");
-        title.setTextSize(20);
-        title.setTextColor(getResources().getColor(android.R.color.black));
-        title.setTypeface(null, android.graphics.Typeface.BOLD);
-        content.addView(title);
+        TextView patientId = new TextView(this);
+        patientId.setText("Patient ID: " + testMemo.getPatientId());
+        patientId.setTextSize(18);
+        patientId.setTextColor(getResources().getColor(android.R.color.black));
+        patientId.setTypeface(null, android.graphics.Typeface.BOLD);
+        content.addView(patientId);
 
         TextView department = new TextView(this);
         department.setText("Department: " + testMemo.getDepartment());
-        department.setTextSize(18);
+        department.setTextSize(16);
         department.setTextColor(getResources().getColor(android.R.color.black));
         content.addView(department);
 

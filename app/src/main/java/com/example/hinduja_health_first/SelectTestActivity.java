@@ -81,9 +81,8 @@ public class SelectTestActivity extends AppCompatActivity {
             // Show notification
             showTestMemoNotification(department, selectedTests);
             
-            // Navigate to MainActivity
-            Intent intent = new Intent(SelectTestActivity.this, MainActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            // Launch the queue activity
+            Intent intent = new Intent(SelectTestActivity.this, TestMemoQueueActivity.class);
             startActivity(intent);
             finish();
         });

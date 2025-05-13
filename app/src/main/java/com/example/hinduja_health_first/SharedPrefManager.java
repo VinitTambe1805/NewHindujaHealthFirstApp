@@ -19,6 +19,7 @@ public class SharedPrefManager {
     private static final String KEY_NAME = "key_name";
     private static final String KEY_PHONE = "key_phone";
     private static final String KEY_APPOINTMENTS = "appointments";
+    private static final String KEY_TEST_MEMOS = "test_memos";
 
     private static SharedPrefManager instance;
     private SharedPreferences sharedPreferences;
@@ -147,13 +148,67 @@ public class SharedPrefManager {
         }
     }
 
+    public void saveTestMemo(String department, List<String> tests) {
+        try {
+            // Get existing test memos
+            String testMemosJson = sharedPreferences.getString(KEY_TEST_MEMOS, "[]");
+            JSONArray testMemosArray = new JSONArray(testMemosJson);
+
+            // Create new test memo object
+            JSONObject newTestMemo = new JSONObject();
+            newTestMemo.put("department", department);
+            newTestMemo.put("tests", new JSONArray(tests));
+            newTestMemo.put("timestamp", System.currentTimeMillis());
+            newTestMemo.put("patientId", "PID" + String.format("%06d", testMemosArray.length() + 1));
+
+            // Add new test memo to array
+            testMemosArray.put(newTestMemo);
+
+            // Save updated test memos
+            sharedPreferences.edit().putString(KEY_TEST_MEMOS, testMemosArray.toString()).apply();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public List<TestMemo> getAllTestMemos() {
+        List<TestMemo> testMemos = new ArrayList<>();
+        try {
+            String testMemosJson = sharedPreferences.getString(KEY_TEST_MEMOS, "[]");
+            JSONArray testMemosArray = new JSONArray(testMemosJson);
+
+            for (int i = 0; i < testMemosArray.length(); i++) {
+                JSONObject memoObj = testMemosArray.getJSONObject(i);
+                String department = memoObj.getString("department");
+                JSONArray testsArray = memoObj.getJSONArray("tests");
+                List<String> tests = new ArrayList<>();
+                for (int j = 0; j < testsArray.length(); j++) {
+                    tests.add(testsArray.getString(j));
+                }
+                long timestamp = memoObj.getLong("timestamp");
+                String patientId = memoObj.getString("patientId");
+
+                TestMemo memo = new TestMemo(department, tests);
+                memo.timestamp = timestamp;
+                memo.patientId = patientId;
+                testMemos.add(memo);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return testMemos;
+    }
+
     public static class TestMemo {
         private String department;
         private List<String> tests;
+        private long timestamp;
+        private String patientId;
 
         public TestMemo(String department, List<String> tests) {
             this.department = department;
             this.tests = tests;
+            this.timestamp = System.currentTimeMillis();
         }
 
         public String getDepartment() {
@@ -163,29 +218,17 @@ public class SharedPrefManager {
         public List<String> getTests() {
             return tests;
         }
-    }
 
-    public void saveTestMemo(String department, List<String> tests) {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString("test_memo_department", department);
-        editor.putStringSet("test_memo_tests", new HashSet<>(tests));
-        editor.apply();
-    }
-
-    public TestMemo getTestMemo() {
-        String department = sharedPreferences.getString("test_memo_department", null);
-        Set<String> testsSet = sharedPreferences.getStringSet("test_memo_tests", null);
-        
-        if (department != null && testsSet != null) {
-            return new TestMemo(department, new ArrayList<>(testsSet));
+        public long getTimestamp() {
+            return timestamp;
         }
-        return null;
+
+        public String getPatientId() {
+            return patientId;
+        }
     }
 
-    public void clearTestMemo() {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.remove("test_memo_department");
-        editor.remove("test_memo_tests");
-        editor.apply();
+    public void clearTestMemos() {
+        sharedPreferences.edit().remove(KEY_TEST_MEMOS).apply();
     }
 } 

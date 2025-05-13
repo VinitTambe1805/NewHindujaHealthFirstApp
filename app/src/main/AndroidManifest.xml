@@ -89,6 +89,8 @@
             android:name=".SelectTestActivity"
             android:exported="false" />
 
+        <activity android:name=".TestMemoQueueActivity" />
+
     </application>
 
 </manifest>

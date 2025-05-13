@@ -95,9 +95,9 @@ public class MainActivity extends AppCompatActivity {
 
                     // Check if there are any appointments or test memos
                     List<SharedPrefManager.Appointment> appointments = sharedPrefManager.getAllAppointments();
-                    SharedPrefManager.TestMemo testMemo = sharedPrefManager.getTestMemo();
+                    List<SharedPrefManager.TestMemo> testMemos = sharedPrefManager.getAllTestMemos();
                     
-                    if (!appointments.isEmpty() || testMemo != null) {
+                    if (!appointments.isEmpty() || !testMemos.isEmpty()) {
                         // Start AppointmentDetailsActivity
                         Intent intent = new Intent(MainActivity.this, AppointmentDetailsActivity.class);
                         startActivity(intent);
