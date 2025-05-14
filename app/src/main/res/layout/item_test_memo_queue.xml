@@ -22,18 +22,12 @@
             android:textColor="@color/black"/>
 
         <TextView
-            android:id="@+id/department"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textSize="16sp"/>
-
-        <TextView
             android:id="@+id/tests"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:textSize="16sp"/>
+            android:textSize="16sp"
+            android:textColor="@color/lightblue"/>
 
         <TextView
             android:id="@+id/timestamp"
@@ -41,7 +35,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:textSize="14sp"
-            android:textStyle="italic"/>
+            android:textStyle="italic"
+            android:textColor="@color/lightblue"/>
 
     </LinearLayout>
 

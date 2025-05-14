@@ -409,7 +409,7 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
                 } else {
                     runOnUiThread(() -> {
                         Toast.makeText(this, "No route found", Toast.LENGTH_SHORT).show();
-                        distanceText.setText("Distance: --");
+                        distanceText.setText("Time taken by: --");
                         carTimeText.setText("By Car: --");
                         busTimeText.setText("By Bus: --");
                         bikeTimeText.setText("By Bike: --");

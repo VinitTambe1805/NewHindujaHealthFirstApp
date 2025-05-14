@@ -37,8 +37,8 @@
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
             android:layout_marginTop="10dp"
-            android:hint="@string/select"
             android:backgroundTint="@color/black"
+            android:hint="@string/select"
             app:layout_constraintStart_toStartOf="@id/logo"
             app:layout_constraintTop_toBottomOf="@id/logo">
 
@@ -47,6 +47,7 @@
                 android:id="@+id/auto_complete_txt"
                 android:layout_width="360dp"
                 android:layout_height="wrap_content"
+                android:backgroundTint="@color/black"
                 android:inputType="none"
                 android:padding="8dp" />
 
@@ -95,7 +96,7 @@
             android:layout_marginTop="10dp"
             android:background="@drawable/rectangular_button"
             android:padding="10dp"
-            android:text="Health Blogs"
+            android:text="Department Queues"
             android:textAlignment="center"
             android:textColor="@color/white"
             app:layout_constraintStart_toStartOf="@+id/submit_button"

@@ -34,10 +34,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+
         // Initialize SharedPreferences manager
         sharedPrefManager = SharedPrefManager.getInstance(this);
-        
+
         // Check if user is logged in
         if (!sharedPrefManager.isLoggedIn()) {
             startActivity(new Intent(MainActivity.this, loginActivity.class));
@@ -84,11 +84,11 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 try {
                     Log.d(TAG, "Notification icon clicked");
-                    
+
                     // Check if user is logged in
                     if (!sharedPrefManager.isLoggedIn()) {
-                        Toast.makeText(MainActivity.this, "Please login to view appointments", 
-                            Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "Please login to view appointments",
+                                Toast.LENGTH_SHORT).show();
                         startActivity(new Intent(MainActivity.this, loginActivity.class));
                         return;
                     }
@@ -96,19 +96,19 @@ public class MainActivity extends AppCompatActivity {
                     // Check if there are any appointments or test memos
                     List<SharedPrefManager.Appointment> appointments = sharedPrefManager.getAllAppointments();
                     List<SharedPrefManager.TestMemo> testMemos = sharedPrefManager.getAllTestMemos();
-                    
+
                     if (!appointments.isEmpty() || !testMemos.isEmpty()) {
                         // Start AppointmentDetailsActivity
                         Intent intent = new Intent(MainActivity.this, AppointmentDetailsActivity.class);
                         startActivity(intent);
                     } else {
-                        Toast.makeText(MainActivity.this, "No appointments or test memos found", 
-                            Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "No appointments or test memos found",
+                                Toast.LENGTH_SHORT).show();
                     }
                 } catch (Exception e) {
                     Log.e(TAG, "Error opening appointments: " + e.getMessage(), e);
-                    Toast.makeText(MainActivity.this, "Error opening appointments: " + e.getMessage(), 
-                        Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Error opening appointments: " + e.getMessage(),
+                            Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -120,8 +120,8 @@ public class MainActivity extends AppCompatActivity {
 
         if (isAppointmentFragmentVisible) {
             // If fragment is already visible, remove it
-            AppointmentFragment existingFragment = (AppointmentFragment) 
-                fragmentManager.findFragmentByTag("APPOINTMENT_FRAGMENT");
+            AppointmentFragment existingFragment = (AppointmentFragment)
+                    fragmentManager.findFragmentByTag("APPOINTMENT_FRAGMENT");
             if (existingFragment != null) {
                 transaction.remove(existingFragment);
                 isAppointmentFragmentVisible = false;
@@ -141,10 +141,10 @@ public class MainActivity extends AppCompatActivity {
         autoCompleteTextView = findViewById(R.id.auto_complete_txt);
         adapterItems = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, hospitals);
         autoCompleteTextView.setAdapter(adapterItems);
-        
+
         // Set threshold to show suggestions after 1 character
         autoCompleteTextView.setThreshold(1);
-        
+
         // Handle item selection
         autoCompleteTextView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -197,7 +197,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void performSearch(String query) {
         query = query.toLowerCase().trim();
-        
+
         // Filter hospitals in the dropdown
         if (query.length() > 0) {
             String[] filteredHospitals = new String[hospitals.length];

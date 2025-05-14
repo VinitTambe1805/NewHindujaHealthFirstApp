@@ -33,15 +33,7 @@
 
     </androidx.appcompat.widget.Toolbar>
 
-    <!-- Queue count -->
-    <TextView
-        android:id="@+id/queueCount"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:textSize="16sp"
-        android:textColor="@color/black"
-        android:textStyle="bold"/>
+    <!-- Patients in Queue label aligned right -->
 
     <!-- RecyclerView for queue items -->
     <androidx.recyclerview.widget.RecyclerView

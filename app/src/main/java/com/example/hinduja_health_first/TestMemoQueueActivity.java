@@ -3,7 +3,6 @@ package com.example.hinduja_health_first;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.ImageButton;
-import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -17,7 +16,6 @@ public class TestMemoQueueActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private TestMemoQueueAdapter adapter;
     private SharedPrefManager sharedPrefManager;
-    private TextView queueCount;
     private ImageButton backButton;
     private MaterialButton backToHomeButton;
 
@@ -28,7 +26,6 @@ public class TestMemoQueueActivity extends AppCompatActivity {
 
         sharedPrefManager = SharedPrefManager.getInstance(this);
         recyclerView = findViewById(R.id.queueRecyclerView);
-        queueCount = findViewById(R.id.queueCount);
         backButton = findViewById(R.id.backButton);
         backToHomeButton = findViewById(R.id.backToHomeButton);
 
@@ -42,9 +39,6 @@ public class TestMemoQueueActivity extends AppCompatActivity {
                 return Long.compare(m2.getTimestamp(), m1.getTimestamp());
             }
         });
-
-        // Update queue count
-        updateQueueCount(testMemos.size());
 
         adapter = new TestMemoQueueAdapter(testMemos);
         recyclerView.setAdapter(adapter);
@@ -61,11 +55,6 @@ public class TestMemoQueueActivity extends AppCompatActivity {
         });
     }
 
-    private void updateQueueCount(int count) {
-        String countText = count + " patient" + (count != 1 ? "s" : "") + " in queue";
-        queueCount.setText(countText);
-    }
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -78,6 +67,5 @@ public class TestMemoQueueActivity extends AppCompatActivity {
             }
         });
         adapter.updateData(testMemos);
-        updateQueueCount(testMemos.size());
     }
 } 

@@ -15,4 +15,5 @@
     <color name="list_item_background">#EEEEEE</color>
     <color name="separator_color">#BDBDBD</color>
     <color name="route_color">#1976D2</color>
+    <color name="colorPrimary">#2196F3</color>
 </resources>
