@@ -170,6 +170,11 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(MainActivity.this, SlotBooking.class);
             startActivity(intent);
         });
+
+        healthBlog.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, TestMemoQueueActivity.class);
+            startActivity(intent);
+        });
     }
 
     private void setupSearchView() {
