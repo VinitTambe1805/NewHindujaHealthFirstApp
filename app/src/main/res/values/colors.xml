@@ -1,19 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Primary brand colors -->
+    <color name="primary">#1976D2</color>
+    <color name="primary_dark">#1565C0</color>
+    <color name="primary_light">#BBDEFB</color>
+    <color name="accent">#FF4081</color>
+
+    <!-- Additional colors -->
+    <color name="lightblue">#BBDEFB</color>
+    <color name="yellow">#FFEB3B</color>
+    <color name="grey">#757575</color>
+    <color name="teal_700">#018786</color>
+    <color name="chip_background_color">#E0E0E0</color>
+    <color name="colorPrimary">#1976D2</color>
+    <color name="lavender">#8692f7</color>
+
+    <!-- Standard colors -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="blue">#0000FF</color>
-    <color name="lightblue">#74A8E6</color>
     <color name="green">#008000</color>
-    <color name="grey">#DAD8D8</color>
     <color name="purple_500">#FF6200EE</color>
-    <color name="teal_700">#FF018786</color>
-    <color name="lavender">#8692f7</color>
     <color name="darkblue">#044957</color>
-    <color name="yellow">#FFFF00</color>
-    <color name="chip_background_color">#E0E0E0</color>
     <color name="list_item_background">#EEEEEE</color>
     <color name="separator_color">#BDBDBD</color>
     <color name="route_color">#1976D2</color>
-    <color name="colorPrimary">#2196F3</color>
 </resources>

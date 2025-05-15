@@ -17,11 +17,28 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import com.example.hinduja_health_first.adapters.HealthBlogAdapter;
+import com.example.hinduja_health_first.models.HealthBlog;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
+    private static final String NEWS_API_KEY = "cb0fb7ece482479fa06d269501790160"; // <-- your API key
+    private static final String NEWS_API_URL = "https://newsapi.org/v2/top-headlines?country=in&category=health&apiKey=" + NEWS_API_KEY;
     private SearchView searchView;
     private Button bookAppoint, bookTest, healthBlog, healthCheckup;
     private String[] hospitals = {"Hinduja Hospital Mahim (West)", "Hinduja Hospital Khar(West)"};
@@ -30,6 +47,10 @@ public class MainActivity extends AppCompatActivity {
     private SharedPrefManager sharedPrefManager;
     private ImageButton notificationIcon;
     private boolean isAppointmentFragmentVisible = false;
+    private RecyclerView blogRecyclerView;
+    private HealthBlogAdapter blogAdapter;
+    private ArrayList<HealthBlog> blogList = new ArrayList<>();
+    private RequestQueue requestQueue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
         healthBlog = findViewById(R.id.health_blog);
         healthCheckup = findViewById(R.id.health_checkup);
         notificationIcon = findViewById(R.id.notification_icon);
+        blogRecyclerView = findViewById(R.id.blogRecyclerView);
 
         // Setup hospital dropdown
         setupHospitalDropdown();
@@ -71,6 +93,17 @@ public class MainActivity extends AppCompatActivity {
         if (getIntent().hasExtra("DOCTOR_NAME")) {
             showAppointmentFragment(getIntent().getExtras());
         }
+
+        blogAdapter = new HealthBlogAdapter(blogList, blog -> {
+            Intent intent = new Intent(MainActivity.this, HealthBlogDetailActivity.class);
+            intent.putExtra("blog", blog);
+            startActivity(intent);
+        });
+        blogRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        blogRecyclerView.setAdapter(blogAdapter);
+
+        requestQueue = Volley.newRequestQueue(this);
+        loadHealthBlogs();
     }
 
     private void setupNotificationIcon() {
@@ -230,6 +263,32 @@ public class MainActivity extends AppCompatActivity {
         } else if (query.contains("checkup") || query.contains("health")) {
             startActivity(new Intent(this, SlotBooking.class));
         }
+    }
+
+    private void loadHealthBlogs() {
+        blogList.clear();
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, NEWS_API_URL, null,
+            response -> {
+                try {
+                    JSONArray articles = response.getJSONArray("articles");
+                    for (int i = 0; i < articles.length(); i++) {
+                        JSONObject article = articles.getJSONObject(i);
+                        String title = article.optString("title", "");
+                        String description = article.optString("description", "");
+                        String imageUrl = article.optString("urlToImage", "");
+                        String source = article.getJSONObject("source").optString("name", "");
+                        String publishedAt = article.optString("publishedAt", "");
+                        String url = article.optString("url", "");
+                        blogList.add(new HealthBlog(title, description, imageUrl, source, publishedAt, url));
+                    }
+                    blogAdapter.notifyDataSetChanged();
+                } catch (JSONException e) {
+                    Toast.makeText(this, "Error parsing news data", Toast.LENGTH_SHORT).show();
+                }
+            },
+            error -> Toast.makeText(this, "Error loading news: " + error.getMessage(), Toast.LENGTH_SHORT).show()
+        );
+        requestQueue.add(request);
     }
 
     @Override

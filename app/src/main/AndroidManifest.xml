@@ -91,6 +91,8 @@
 
         <activity android:name=".TestMemoQueueActivity" />
 
+        <activity android:name=".HealthBlogDetailActivity" />
+
     </application>
 
 </manifest>
