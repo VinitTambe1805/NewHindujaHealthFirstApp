@@ -38,6 +38,8 @@ public class HealthBlogAdapter extends RecyclerView.Adapter<HealthBlogAdapter.Bl
     public void onBindViewHolder(@NonNull BlogViewHolder holder, int position) {
         HealthBlog blog = blogList.get(position);
         holder.titleTextView.setText(blog.getTitle());
+        holder.descriptionTextView.setText(blog.getDescription());
+        holder.sourceTextView.setText("Source: " + blog.getSource());
         holder.itemView.setOnClickListener(v -> listener.onBlogClick(blog));
     }
 
@@ -48,9 +50,14 @@ public class HealthBlogAdapter extends RecyclerView.Adapter<HealthBlogAdapter.Bl
 
     static class BlogViewHolder extends RecyclerView.ViewHolder {
         TextView titleTextView;
+        TextView descriptionTextView;
+        TextView sourceTextView;
+
         BlogViewHolder(@NonNull View itemView) {
             super(itemView);
             titleTextView = itemView.findViewById(R.id.blogTitle);
+            descriptionTextView = itemView.findViewById(R.id.blogDescription);
+            sourceTextView = itemView.findViewById(R.id.blogSource);
         }
     }
 } 

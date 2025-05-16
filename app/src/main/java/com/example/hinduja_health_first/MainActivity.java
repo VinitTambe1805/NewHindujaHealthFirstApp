@@ -37,7 +37,7 @@ import com.android.volley.toolbox.Volley;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
-    private static final String NEWS_API_KEY = "cb0fb7ece482479fa06d269501790160"; // <-- your API key
+    private static final String NEWS_API_KEY = "cb0fb7ece482479fa06d269501790160";
     private static final String NEWS_API_URL = "https://newsapi.org/v2/top-headlines?country=in&category=health&apiKey=" + NEWS_API_KEY;
     private SearchView searchView;
     private Button bookAppoint, bookTest, healthBlog, healthCheckup;
@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
             finish();
             return;
         }
-
+  
         setContentView(R.layout.activity_main);
 
         // Initialize views
@@ -101,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
         });
         blogRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         blogRecyclerView.setAdapter(blogAdapter);
+        blogRecyclerView.setVisibility(View.VISIBLE);
 
         requestQueue = Volley.newRequestQueue(this);
         loadHealthBlogs();
@@ -267,28 +268,54 @@ public class MainActivity extends AppCompatActivity {
 
     private void loadHealthBlogs() {
         blogList.clear();
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, NEWS_API_URL, null,
-            response -> {
-                try {
-                    JSONArray articles = response.getJSONArray("articles");
-                    for (int i = 0; i < articles.length(); i++) {
-                        JSONObject article = articles.getJSONObject(i);
-                        String title = article.optString("title", "");
-                        String description = article.optString("description", "");
-                        String imageUrl = article.optString("urlToImage", "");
-                        String source = article.getJSONObject("source").optString("name", "");
-                        String publishedAt = article.optString("publishedAt", "");
-                        String url = article.optString("url", "");
-                        blogList.add(new HealthBlog(title, description, imageUrl, source, publishedAt, url));
-                    }
-                    blogAdapter.notifyDataSetChanged();
-                } catch (JSONException e) {
-                    Toast.makeText(this, "Error parsing news data", Toast.LENGTH_SHORT).show();
-                }
-            },
-            error -> Toast.makeText(this, "Error loading news: " + error.getMessage(), Toast.LENGTH_SHORT).show()
-        );
-        requestQueue.add(request);
+
+        // Add dummy health blog data
+        blogList.add(new HealthBlog(
+                "Understanding Heart Health: A Complete Guide",
+                "Learn about maintaining a healthy heart, including diet tips, exercise recommendations, and warning signs to watch for.",
+                "",
+                "Hinduja Health First",
+                "2024-03-20",
+                "https://hindujahealth.com/heart-health-guide"
+        ));
+
+        blogList.add(new HealthBlog(
+                "The Importance of Regular Health Check-ups",
+                "Regular health check-ups can help detect potential health issues early. Find out what tests you should get and how often.",
+                "",
+                "Hinduja Health First",
+                "2024-03-19",
+                "https://hindujahealth.com/health-checkups"
+        ));
+
+        blogList.add(new HealthBlog(
+                "Mental Health and Well-being in Modern Times",
+                "Explore the impact of modern lifestyle on mental health and discover effective strategies for maintaining emotional well-being.",
+                "",
+                "Hinduja Health First",
+                "2024-03-18",
+                "https://hindujahealth.com/mental-health"
+        ));
+
+        blogList.add(new HealthBlog(
+                "Nutrition Tips for a Healthy Lifestyle",
+                "Essential nutrition tips and dietary guidelines to help you maintain a balanced and healthy lifestyle.",
+                "",
+                "Hinduja Health First",
+                "2024-03-17",
+                "https://hindujahealth.com/nutrition-tips"
+        ));
+
+        blogList.add(new HealthBlog(
+                "Exercise and Physical Activity: Finding Your Balance",
+                "Discover the right amount of exercise for your age and lifestyle, and learn how to incorporate physical activity into your daily routine.",
+                "",
+                "Hinduja Health First",
+                "2024-03-16",
+                "https://hindujahealth.com/exercise-guide"
+        ));
+
+        blogAdapter.notifyDataSetChanged();
     }
 
     @Override
