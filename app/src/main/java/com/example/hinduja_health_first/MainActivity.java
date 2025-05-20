@@ -191,7 +191,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupButtonClickListeners() {
         bookAppoint.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, RecycleActivity.class);
+            Intent intent = new Intent(MainActivity.this, SpecialtyActivity.class);
             startActivity(intent);
         });
 

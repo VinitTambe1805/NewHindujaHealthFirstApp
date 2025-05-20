@@ -1,6 +1,6 @@
 package com.example.hinduja_health_first;
 
-import android.content.Intent;
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,29 +9,37 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
-public class DepartmentAdapter extends RecyclerView.Adapter<DepartmentAdapter.ViewHolder> {
+public class DepartmentAdapter extends RecyclerView.Adapter<DepartmentAdapter.DepartmentViewHolder> {
     private List<String> departments;
+    private Context context;
+    private OnDepartmentClickListener listener;
 
-    public DepartmentAdapter(List<String> departments) {
+    public interface OnDepartmentClickListener {
+        void onDepartmentClick(String department);
+    }
+
+    public DepartmentAdapter(Context context, List<String> departments, OnDepartmentClickListener listener) {
+        this.context = context;
         this.departments = departments;
+        this.listener = listener;
     }
 
     @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
-            .inflate(R.layout.item_department, parent, false);
-        return new ViewHolder(view);
+    public DepartmentViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(context).inflate(R.layout.item_department, parent, false);
+        return new DepartmentViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull DepartmentViewHolder holder, int position) {
         String department = departments.get(position);
         holder.departmentName.setText(department);
+
         holder.itemView.setOnClickListener(v -> {
-            Intent intent = new Intent(v.getContext(), SelectTestActivity.class);
-            intent.putExtra("department", department);
-            v.getContext().startActivity(intent);
+            if (listener != null) {
+                listener.onDepartmentClick(department);
+            }
         });
     }
 
@@ -40,9 +48,10 @@ public class DepartmentAdapter extends RecyclerView.Adapter<DepartmentAdapter.Vi
         return departments.size();
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    static class DepartmentViewHolder extends RecyclerView.ViewHolder {
         TextView departmentName;
-        public ViewHolder(@NonNull View itemView) {
+
+        DepartmentViewHolder(@NonNull View itemView) {
             super(itemView);
             departmentName = itemView.findViewById(R.id.departmentName);
         }

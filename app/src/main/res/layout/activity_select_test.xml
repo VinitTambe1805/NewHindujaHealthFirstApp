@@ -1,59 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/img3"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:background="@drawable/img3">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:gravity="center_vertical">
 
         <ImageButton
             android:id="@+id/backButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_arrow_back"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_arrow_back" />
+            android:contentDescription="Back button" />
 
         <TextView
-            android:id="@+id/nameText"
+            android:id="@+id/departmentTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="Select Tests &amp; Services"
+            android:layout_marginStart="16dp"
+            android:textSize="20sp"
             android:textColor="@color/black"
-            android:textSize="28sp"
             android:textStyle="bold" />
-    </LinearLayout>
 
-    <TextView
-        android:id="@+id/selectTestsText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Select Tests:"
-        android:textColor="@color/black"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+    </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewTests"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="16dp"
         android:layout_weight="1"
-        android:background="@android:color/transparent" />
+        android:padding="8dp"
+        android:clipToPadding="false" />
 
     <Button
         android:id="@+id/createMemoButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:backgroundTint="@color/lightblue"
-        android:text="Create Tests Memo"
-        android:textStyle="bold" />
+        android:layout_margin="16dp"
+        android:text="Create Test Memo"
+        android:textColor="@color/white"
+        android:background="@drawable/rectangular_button" />
+
 </LinearLayout> 

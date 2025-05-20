@@ -6,9 +6,9 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.widget.TextView;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,6 +17,7 @@ import androidx.core.app.NotificationManagerCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -27,9 +28,9 @@ public class SelectTestActivity extends AppCompatActivity {
     private static final int NOTIFICATION_ID = 2; // Different ID from appointment notification
     private RecyclerView recyclerView;
     private TestAdapter adapter;
-    private TextView nameText, selectTestsText;
     private Button createMemoButton;
     private ImageButton backButton;
+    private TextView departmentTitle;
 
     // Example test data for each department
     private static final Map<String, List<String>> TESTS_MAP = new HashMap<>();
@@ -47,27 +48,32 @@ public class SelectTestActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_test);
 
+        // Get the selected department from intent
         String department = getIntent().getStringExtra("department");
-        List<String> tests = TESTS_MAP.get(department);
-        if (tests == null) tests = Arrays.asList("Test 1", "Test 2", "Test 3");
-
-        nameText = findViewById(R.id.nameText);
-        selectTestsText = findViewById(R.id.selectTestsText);
-        createMemoButton = findViewById(R.id.createMemoButton);
+        
+        // Initialize views
         backButton = findViewById(R.id.backButton);
+        departmentTitle = findViewById(R.id.departmentTitle);
         recyclerView = findViewById(R.id.recyclerViewTests);
 
-        nameText.setText("Select Tests & Services");
-        selectTestsText.setText("Select Tests:");
+        // Set department title
+        departmentTitle.setText(department + " Tests");
 
+        // Setup back button
+        backButton.setOnClickListener(v -> finish());
+
+        // Setup RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        // Get tests based on department
+        List<String> tests = getTestsForDepartment(department);
         adapter = new TestAdapter(tests);
         recyclerView.setAdapter(adapter);
 
         // Create notification channel
         createNotificationChannel();
 
-        backButton.setOnClickListener(v -> finish());
+        createMemoButton = findViewById(R.id.createMemoButton);
         createMemoButton.setOnClickListener(v -> {
             List<String> selectedTests = adapter.getSelectedTests();
             if (selectedTests.isEmpty()) {
@@ -132,6 +138,57 @@ public class SelectTestActivity extends AppCompatActivity {
             notificationManager.notify(NOTIFICATION_ID, builder.build());
         } catch (SecurityException e) {
             Toast.makeText(this, "Failed to show notification: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private List<String> getTestsForDepartment(String department) {
+        switch (department.toLowerCase()) {
+            case "laboratory":
+                return Arrays.asList(
+                    "Complete Blood Count (CBC)",
+                    "Blood Glucose Test",
+                    "Lipid Profile",
+                    "Liver Function Test",
+                    "Kidney Function Test",
+                    "Thyroid Function Test",
+                    "Hemoglobin A1C",
+                    "Urine Analysis"
+                );
+            case "radiology":
+                return Arrays.asList(
+                    "X-Ray Chest",
+                    "X-Ray Spine",
+                    "CT Scan Brain",
+                    "CT Scan Chest",
+                    "MRI Brain",
+                    "MRI Spine",
+                    "Ultrasound Abdomen",
+                    "Ultrasound Pelvis"
+                );
+            case "pathology":
+                return Arrays.asList(
+                    "Biopsy Analysis",
+                    "Cytology Test",
+                    "Histopathology",
+                    "Immunohistochemistry",
+                    "Molecular Pathology",
+                    "Flow Cytometry",
+                    "Genetic Testing",
+                    "Tumor Markers"
+                );
+            case "cardiology":
+                return Arrays.asList(
+                    "ECG (Electrocardiogram)",
+                    "Echocardiogram",
+                    "Stress Test",
+                    "Holter Monitor",
+                    "Cardiac CT Scan",
+                    "Cardiac MRI",
+                    "Coronary Angiography",
+                    "Cardiac Biomarkers"
+                );
+            default:
+                return new ArrayList<>();
         }
     }
 } 
