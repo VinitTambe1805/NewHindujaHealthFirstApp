@@ -10,6 +10,7 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
+import android.graphics.Bitmap;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -30,14 +31,21 @@ import androidx.core.app.NotificationManagerCompat;
 import com.example.hinduja_health_first.ui.login.LoginActivity;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.Dash;
+import com.google.android.gms.maps.model.Dot;
+import com.google.android.gms.maps.model.Gap;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PatternItem;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.maps.DirectionsApi;
@@ -57,6 +65,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -247,12 +256,97 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
                     Address address = addresses.get(0);
                     double lat = address.getLatitude();
                     double lng = address.getLongitude();
-                    LatLng location = new LatLng(lat, lng);
+                    LatLng userLocation = new LatLng(lat, lng);
 
                     runOnUiThread(() -> {
-                        selectedLocation = location;
-                        updateMapMarker();
-                        calculateDistanceAndTimeWithTraffic(location, HOSPITAL_LOCATION);
+                        selectedLocation = userLocation;
+                        
+                        // Clear existing markers and polylines
+                        mMap.clear();
+                        
+                        // Add markers for both locations with red color
+                        mMap.addMarker(new MarkerOptions()
+                                .position(HOSPITAL_LOCATION)
+                                .title("Hinduja Hospital")
+                                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+                        mMap.addMarker(new MarkerOptions()
+                                .position(userLocation)
+                                .title("Your Location")
+                                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+                        
+                        // Get directions using Directions API
+                        DirectionsApiRequest request = DirectionsApi.newRequest(geoApiContext)
+                                .origin(new com.google.maps.model.LatLng(userLocation.latitude, userLocation.longitude))
+                                .destination(new com.google.maps.model.LatLng(HOSPITAL_LOCATION.latitude, HOSPITAL_LOCATION.longitude))
+                                .mode(TravelMode.DRIVING);
+
+                        try {
+                            DirectionsResult result = request.await();
+                            if (result.routes != null && result.routes.length > 0) {
+                                DirectionsRoute route = result.routes[0];
+                                
+                                // Decode the route path
+                                List<LatLng> decodedPath = new ArrayList<>();
+                                for (com.google.maps.model.LatLng point : route.overviewPolyline.decodePath()) {
+                                    decodedPath.add(new LatLng(point.lat, point.lng));
+                                }
+
+                                // Add multiple layers for enhanced glow effect
+                                // Layer 1: Wide, very transparent outer glow
+                                PolylineOptions outerGlow = new PolylineOptions()
+                                        .addAll(decodedPath)
+                                        .width(30)
+                                        .color(ContextCompat.getColor(this, R.color.route_glow_outer))
+                                        .zIndex(0);
+
+                                // Layer 2: Medium, semi-transparent middle glow
+                                PolylineOptions middleGlow = new PolylineOptions()
+                                        .addAll(decodedPath)
+                                        .width(20)
+                                        .color(ContextCompat.getColor(this, R.color.route_glow_middle))
+                                        .zIndex(1);
+
+                                // Layer 3: Main route line
+                                PolylineOptions mainRoute = new PolylineOptions()
+                                        .addAll(decodedPath)
+                                        .width(12)
+                                        .color(ContextCompat.getColor(this, R.color.route_color))
+                                        .pattern(Arrays.asList(new Dot(), new Gap(20)))
+                                        .zIndex(2);
+
+                                // Add all layers to the map
+                                mMap.addPolyline(outerGlow);
+                                mMap.addPolyline(middleGlow);
+                                mMap.addPolyline(mainRoute);
+
+                                // Zoom to show the entire route with padding
+                                LatLngBounds bounds = new LatLngBounds.Builder()
+                                        .include(HOSPITAL_LOCATION)
+                                        .include(userLocation)
+                                        .build();
+                                mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100));
+                            }
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error getting directions: " + e.getMessage());
+                            // Fallback to straight line if directions API fails
+                            List<LatLng> routePoints = new ArrayList<>();
+                            routePoints.add(HOSPITAL_LOCATION);
+                            routePoints.add(userLocation);
+                            
+                            // Add fallback route with glow effect
+                            mMap.addPolyline(new PolylineOptions()
+                                    .addAll(routePoints)
+                                    .width(20)
+                                    .color(ContextCompat.getColor(this, R.color.route_glow)));
+                            mMap.addPolyline(new PolylineOptions()
+                                    .addAll(routePoints)
+                                    .width(10)
+                                    .color(ContextCompat.getColor(this, R.color.route_color)));
+                        }
+                        
+                        // Calculate and display travel times
+                        calculateDistanceAndTimeWithTraffic(userLocation, HOSPITAL_LOCATION);
+                        
                         submitButton.setEnabled(true);
                         submitButton.setText("SUBMIT");
                         Toast.makeText(this, "Location found", Toast.LENGTH_SHORT).show();
@@ -318,141 +412,59 @@ public class SlotBooking extends AppCompatActivity implements OnMapReadyCallback
     }
 
     private void calculateDistanceAndTimeWithTraffic(LatLng origin, LatLng destination) {
-        final Instant departureTime = Instant.now();
-        executorService.execute(() -> {
-            try {
-                // Calculate distance and time for car with real-time traffic
-                DirectionsApiRequest carRequest = DirectionsApi.newRequest(geoApiContext)
-                        .origin(new com.google.maps.model.LatLng(origin.latitude, origin.longitude))
-                        .destination(new com.google.maps.model.LatLng(destination.latitude, destination.longitude))
-                        .mode(TravelMode.DRIVING)
-                        .departureTime(departureTime)
-                        .trafficModel(com.google.maps.model.TrafficModel.BEST_GUESS);
+        // Dummy values for demonstration (in seconds)
+        final long carTimeSeconds = 5400;    // 1 hour 30 minutes
+        final long busTimeSeconds = 7200;    // 2 hours
+        final long bikeTimeSeconds = 6300;   // 1 hour 45 minutes
 
-                DirectionsResult carResult = carRequest.await();
-                if (carResult.routes != null && carResult.routes.length > 0) {
-                    final DirectionsRoute carRoute = carResult.routes[0];
-                    final DirectionsLeg carLeg = carRoute.legs[0];
-                    final String carDistance = carLeg.distance.humanReadable;
-                    final String carDuration = carLeg.duration.humanReadable;
-                    final long durationInSeconds = carLeg.duration.inSeconds;
-                    final boolean hasTrafficInfo = carLeg.durationInTraffic != null;
-                    final long durationInTrafficSeconds = hasTrafficInfo ? carLeg.durationInTraffic.inSeconds : durationInSeconds;
-                    final String trafficInfo = hasTrafficInfo ?
-                            " (Current traffic: " + formatTrafficDelay(durationInTrafficSeconds - durationInSeconds) + ")" : "";
+        // Update UI with dummy values
+        runOnUiThread(() -> {
+            // Update time information
+            distanceText.setText("Time taken by:");
+            
+            // Format car time
+            String carTimeFormatted = formatDuration(carTimeSeconds);
+            carTimeText.setText("By Car: " + carTimeFormatted);
+            
+            // Format bus time
+            String busTimeFormatted = formatDuration(busTimeSeconds);
+            busTimeText.setText("By Bus: " + busTimeFormatted);
+            
+            // Format bike time
+            String bikeTimeFormatted = formatDuration(bikeTimeSeconds);
+            bikeTimeText.setText("By Bike: " + bikeTimeFormatted);
 
-                    // Calculate time for bus
-                    DirectionsApiRequest busRequest = DirectionsApi.newRequest(geoApiContext)
-                            .origin(new com.google.maps.model.LatLng(origin.latitude, origin.longitude))
-                            .destination(new com.google.maps.model.LatLng(destination.latitude, destination.longitude))
-                            .mode(TravelMode.TRANSIT)
-                            .departureTime(departureTime);
+            // Draw a simple line on the map
+            List<LatLng> points = new ArrayList<>();
+            points.add(origin);
+            points.add(destination);
 
-                    DirectionsResult busResult = busRequest.await();
-                    final String busDuration;
-                    if (busResult.routes != null && busResult.routes.length > 0) {
-                        DirectionsRoute busRoute = busResult.routes[0];
-                        DirectionsLeg busLeg = busRoute.legs[0];
-                        busDuration = busLeg.duration.humanReadable;
-                    } else {
-                        busDuration = "Not available";
-                    }
+            mMap.addPolyline(new PolylineOptions()
+                    .addAll(points)
+                    .width(10)
+                    .color(ContextCompat.getColor(this, R.color.route_color)));
 
-                    // Calculate time for bike
-                    DirectionsApiRequest bikeRequest = DirectionsApi.newRequest(geoApiContext)
-                            .origin(new com.google.maps.model.LatLng(origin.latitude, origin.longitude))
-                            .destination(new com.google.maps.model.LatLng(destination.latitude, destination.longitude))
-                            .mode(TravelMode.BICYCLING)
-                            .departureTime(departureTime);
+            // Zoom to show the entire route
+            LatLngBounds.Builder boundsBuilder = new LatLngBounds.Builder();
+            boundsBuilder.include(origin);
+            boundsBuilder.include(destination);
+            mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 100));
 
-                    DirectionsResult bikeResult = bikeRequest.await();
-                    final String bikeDuration;
-                    if (bikeResult.routes != null && bikeResult.routes.length > 0) {
-                        DirectionsRoute bikeRoute = bikeResult.routes[0];
-                        DirectionsLeg bikeLeg = bikeRoute.legs[0];
-                        bikeDuration = bikeLeg.duration.humanReadable;
-                    } else {
-                        bikeDuration = "Not available";
-                    }
-
-                    // Calculate suggested time slots based on real-time traffic
-                    final List<String> suggestedSlots = calculateSuggestedTimeSlotsWithTraffic(durationInTrafficSeconds);
-
-                    // Update UI with the results
-                    runOnUiThread(() -> {
-                        // Update distance and time information
-                        distanceText.setText("Distance: " + carDistance);
-                        carTimeText.setText("By Car: " + carDuration + trafficInfo);
-                        busTimeText.setText("By Bus: " + busDuration);
-                        bikeTimeText.setText("By Bike: " + bikeDuration);
-
-                        // Draw the route on the map
-                        List<LatLng> points = new ArrayList<>();
-                        for (com.google.maps.model.LatLng point : carRoute.overviewPolyline.decodePath()) {
-                            points.add(new LatLng(point.lat, point.lng));
-                        }
-
-                        mMap.addPolyline(new PolylineOptions()
-                                .addAll(points)
-                                .width(10)
-                                .color(ContextCompat.getColor(this, R.color.route_color)));
-
-                        // Zoom to show the entire route
-                        LatLngBounds.Builder boundsBuilder = new LatLngBounds.Builder();
-                        boundsBuilder.include(origin);
-                        boundsBuilder.include(destination);
-                        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 100));
-
-                        // Update time slots based on real-time traffic
-                        updateTimeSlotsWithSuggestions(suggestedSlots);
-                    });
-                } else {
-                    runOnUiThread(() -> {
-                        Toast.makeText(this, "No route found", Toast.LENGTH_SHORT).show();
-                        distanceText.setText("Time taken by: --");
-                        carTimeText.setText("By Car: --");
-                        busTimeText.setText("By Bus: --");
-                        bikeTimeText.setText("By Bike: --");
-                        updateTimeSlotsWithDefaultValues();
-                    });
-                }
-            } catch (Exception e) {
-                Log.e(TAG, "Error calculating distance and time: " + e.getMessage());
-                runOnUiThread(() -> {
-                    if (e.getMessage() != null && e.getMessage().contains("not authorized")) {
-                        Toast.makeText(this,
-                                "Please enable Directions API, Distance Matrix API, and Geocoding API in Google Cloud Console",
-                                Toast.LENGTH_LONG).show();
-                    } else {
-                        Toast.makeText(this,
-                                "Error calculating route: " + e.getMessage(),
-                                Toast.LENGTH_SHORT).show();
-                    }
-                    distanceText.setText("Distance: --");
-                    carTimeText.setText("By Car: --");
-                    busTimeText.setText("By Bus: --");
-                    bikeTimeText.setText("By Bike: --");
-
-                    mMap.clear();
-                    mMap.addMarker(new MarkerOptions().position(origin).title("Your Location"));
-                    mMap.addMarker(new MarkerOptions().position(destination).title("Hospital"));
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(
-                            new LatLngBounds.Builder()
-                                    .include(origin)
-                                    .include(destination)
-                                    .build(), 100));
-
-                    updateTimeSlotsWithDefaultValues();
-                });
-            }
+            // Calculate suggested time slots based on dummy travel time
+            List<String> suggestedSlots = calculateSuggestedTimeSlotsWithTraffic(carTimeSeconds);
+            updateTimeSlotsWithSuggestions(suggestedSlots);
         });
     }
 
-    private String formatTrafficDelay(long delaySeconds) {
-        if (delaySeconds <= 0) return "No delay";
-        long minutes = delaySeconds / 60;
-        if (minutes < 1) return "Less than 1 minute";
-        return minutes + " minutes";
+    private String formatDuration(long seconds) {
+        long hours = seconds / 3600;
+        long minutes = (seconds % 3600) / 60;
+        
+        if (hours > 0) {
+            return String.format("%d hr %d min", hours, minutes);
+        } else {
+            return String.format("%d min", minutes);
+        }
     }
 
     private List<String> calculateSuggestedTimeSlotsWithTraffic(long travelTimeSeconds) {

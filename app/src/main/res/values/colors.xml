@@ -25,5 +25,8 @@
     <color name="darkblue">#044957</color>
     <color name="list_item_background">#EEEEEE</color>
     <color name="separator_color">#BDBDBD</color>
-    <color name="route_color">#1976D2</color>
+    <color name="route_color">#4285F4</color>
+    <color name="route_glow">#804285F4</color>
+    <color name="route_glow_outer">#404285F4</color>
+    <color name="route_glow_middle">#604285F4</color>
 </resources>

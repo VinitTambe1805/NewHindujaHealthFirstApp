@@ -19,7 +19,7 @@
         android:id="@+id/docname"
         android:layout_toEndOf="@+id/docimageview"
         android:textColor="@color/teal_700"
-        android:textSize="20dp"
+        android:textSize="25dp"
         android:text="Name" />
 
 

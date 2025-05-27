@@ -19,7 +19,7 @@
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:scaleType="centerCrop"
-            android:src="@drawable/doctor_placeholder"
+            android:src="@drawable/img7"
             android:contentDescription="Doctor Image" />
 
         <LinearLayout
