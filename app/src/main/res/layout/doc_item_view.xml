@@ -18,7 +18,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/docname"
         android:layout_toEndOf="@+id/docimageview"
-        android:textColor="@color/lightblue"
+        android:textColor="@color/teal_700"
         android:textSize="20dp"
         android:text="Name" />
 

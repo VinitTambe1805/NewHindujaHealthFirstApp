@@ -23,6 +23,15 @@
             android:contentDescription="Back" />
 
         <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Select Doctor:"
+            android:textSize="20sp"
+            android:textColor="@color/black"
+            android:textStyle="bold"
+            android:layout_marginStart="16dp" />
+
+        <TextView
             android:id="@+id/specialtyTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -56,6 +65,7 @@
         android:layout_below="@id/searchEditText"
         android:layout_marginTop="8dp"
         android:padding="8dp"
-        android:clipToPadding="false" />
+        android:clipToPadding="false"
+        android:scrollbars="vertical" />
 
 </RelativeLayout>
